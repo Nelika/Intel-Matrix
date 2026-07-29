@@ -1,0 +1,6 @@
+{
+  "name": "APT Threat Intelligence Matrix",
+  "description": "Interactive cybersecurity threat intelligence matrix mapping APT groups, state authorities, front companies, targeted sectors, and legal actions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
