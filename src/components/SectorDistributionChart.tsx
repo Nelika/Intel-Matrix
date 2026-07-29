@@ -10,6 +10,11 @@ import {
   Radio,
   Cpu,
   Zap,
+  Layers,
+  TrendingUp,
+  X,
+  Sparkles,
+  LineChart as LineChartIcon,
 } from 'lucide-react';
 import {
   BarChart,
@@ -22,6 +27,10 @@ import {
   PieChart,
   Pie,
   CartesianGrid,
+  AreaChart,
+  Area,
+  LineChart,
+  Line,
 } from 'recharts';
 
 interface SectorDistributionChartProps {
@@ -35,7 +44,8 @@ export const SectorDistributionChart: React.FC<SectorDistributionChartProps> = (
   onSelectSector,
   selectedSector,
 }) => {
-  const [chartView, setChartView] = useState<'recharts' | 'compact'>('recharts');
+  const [chartView, setChartView] = useState<'chart' | 'spectrum'>('chart');
+  const [dualSeriesSubMode, setDualSeriesSubMode] = useState<'line' | 'grouped' | 'stacked' | 'area'>('line');
 
   // Aggregate sectors
   const sectorCounts: Record<string, number> = {};
@@ -48,12 +58,32 @@ export const SectorDistributionChart: React.FC<SectorDistributionChartProps> = (
   const sortedSectors = Object.entries(sectorCounts).sort((a, b) => b[1] - a[1]);
   const maxCount = Math.max(...Object.values(sectorCounts), 1);
 
-  // Recharts Sector Data
-  const sectorChartData = sortedSectors.map(([sector, count]) => ({
-    name: sector,
-    count,
-    percentage: Math.round((count / maxCount) * 100),
-  }));
+  // Recharts Sector Data with Dual Series (MSS vs PLA)
+  const sectorChartData = sortedSectors.map(([sector, count]) => {
+    let mssCount = 0;
+    let plaCount = 0;
+    data.forEach((apt) => {
+      if (apt.targetedSectors.includes(sector)) {
+        if (apt.sponsoringOrgType.includes('MSS')) {
+          mssCount++;
+        } else {
+          plaCount++;
+        }
+      }
+    });
+
+    return {
+      name: sector,
+      count,
+      mssCount,
+      plaCount,
+      percentage: Math.round((count / maxCount) * 100),
+    };
+  });
+
+  const totalMssHits = sectorChartData.reduce((acc, curr) => acc + curr.mssCount, 0);
+  const totalPlaHits = sectorChartData.reduce((acc, curr) => acc + curr.plaCount, 0);
+  const topSectorName = sortedSectors.length > 0 ? sortedSectors[0][0] : 'N/A';
 
   // Sponsor Counts & Pie Data
   const sponsorCounts: Record<string, number> = {};
@@ -73,36 +103,98 @@ export const SectorDistributionChart: React.FC<SectorDistributionChartProps> = (
     'Joint / Independent': '#8b5cf6',
   };
 
+  const CustomXAxisTick = (props: any) => {
+    const { x, y, payload } = props;
+    const rawValue: string = payload.value || '';
+    
+    // Smartly format / shorten long sector names so they never overlap on the X-axis
+    let displayValue = rawValue;
+    if (rawValue.length > 15) {
+      displayValue = rawValue
+        .replace('Technology / Telecommunications', 'Tech / Telecom')
+        .replace('Technology', 'Tech')
+        .replace('Telecommunications', 'Telecom')
+        .replace('Government / Defense', 'Govt / Defense')
+        .replace('Government', 'Govt')
+        .replace('Critical Infrastructure', 'Critical Infra')
+        .replace('Infrastructure', 'Infra')
+        .replace('Healthcare / Pharma', 'Health / Pharma')
+        .replace('Healthcare', 'Health')
+        .replace('Aerospace & Defense', 'Aero & Defense')
+        .replace('Aerospace', 'Aero');
+    }
+
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text
+          x={0}
+          y={0}
+          dx={-6}
+          dy={10}
+          textAnchor="end"
+          transform="rotate(-38)"
+          fill="#cbd5e1"
+          fontSize={10}
+          fontFamily="monospace"
+          fontWeight={600}
+        >
+          {displayValue}
+        </text>
+      </g>
+    );
+  };
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const dataItem = payload[0].payload;
+      const total = (dataItem.mssCount || 0) + (dataItem.plaCount || 0) || 1;
+      const mssPct = Math.round(((dataItem.mssCount || 0) / total) * 100);
+      const plaPct = 100 - mssPct;
+
       return (
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 5 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.15 }}
-          className="bg-slate-950/95 border border-cyan-500/50 p-3 shadow-[0_0_20px_rgba(6,182,212,0.25)] rounded-lg font-mono text-xs backdrop-blur-md text-slate-200"
+          className="bg-slate-950/95 border border-cyan-500/50 p-3 shadow-[0_0_25px_rgba(6,182,212,0.3)] rounded-lg font-mono text-xs backdrop-blur-md text-slate-200 min-w-[220px]"
         >
-          <div className="flex items-center justify-between gap-3 border-b border-cyan-900/60 pb-1.5 mb-1.5">
-            <span className="text-cyan-400 font-bold tracking-wider flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+          <div className="flex items-center justify-between gap-3 border-b border-cyan-900/60 pb-2 mb-2">
+            <span className="text-cyan-400 font-bold tracking-wider flex items-center gap-1.5 truncate max-w-[160px]">
+              <Cpu className="w-3.5 h-3.5 text-cyan-400 animate-pulse shrink-0" />
               {dataItem.name}
             </span>
-            <span className="text-[10px] text-slate-400 bg-cyan-950/80 px-1.5 py-0.5 rounded border border-cyan-800">
+            <span className="text-[10px] text-slate-400 bg-cyan-950/80 px-1.5 py-0.5 rounded border border-cyan-800 shrink-0">
               VECTOR
             </span>
           </div>
-          <div className="space-y-1">
-            <div className="flex justify-between text-[11px]">
-              <span className="text-slate-400">Tracked APT Groups:</span>
-              <span className="text-amber-400 font-bold">{dataItem.count ?? dataItem.value}</span>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-[11px]">
+              <span className="flex items-center gap-1.5 text-sky-400">
+                <span className="w-2.5 h-2.5 rounded-xs bg-sky-500 border border-sky-300 shadow-[0_0_6px_rgba(56,189,248,0.8)]" />
+                MSS / Civilian Intel:
+              </span>
+              <span className="text-sky-300 font-bold">{dataItem.mssCount} ({mssPct}%)</span>
             </div>
-            {dataItem.percentage !== undefined && (
-              <div className="flex justify-between text-[11px]">
-                <span className="text-slate-400">Relative Exposure:</span>
-                <span className="text-cyan-300 font-bold">{dataItem.percentage}%</span>
-              </div>
-            )}
+
+            <div className="flex justify-between items-center text-[11px]">
+              <span className="flex items-center gap-1.5 text-orange-400">
+                <span className="w-2.5 h-2.5 rounded-xs bg-orange-500 border border-orange-300 shadow-[0_0_6px_rgba(251,146,60,0.8)]" />
+                PLA / Military Cyber:
+              </span>
+              <span className="text-orange-300 font-bold">{dataItem.plaCount} ({plaPct}%)</span>
+            </div>
+
+            {/* Visual Ratio Bar */}
+            <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden flex border border-slate-800 my-1">
+              <div className="h-full bg-sky-500 transition-all" style={{ width: `${mssPct}%` }} />
+              <div className="h-full bg-orange-500 transition-all" style={{ width: `${plaPct}%` }} />
+            </div>
+
+            <div className="flex justify-between items-center text-[11px] border-t border-slate-800/80 pt-1.5 mt-1">
+              <span className="text-slate-400 font-medium">Total Group Exposure:</span>
+              <span className="text-amber-400 font-bold">{dataItem.count} APTs</span>
+            </div>
           </div>
         </motion.div>
       );
@@ -132,7 +224,7 @@ export const SectorDistributionChart: React.FC<SectorDistributionChartProps> = (
         <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-500 rounded-br pointer-events-none transition-all duration-300 group-hover:w-4 group-hover:h-4 group-hover:border-cyan-400" />
 
         {/* Header Bar */}
-        <div className="flex flex-wrap items-center justify-between mb-5 border-b border-slate-800/80 pb-3.5 gap-2 relative z-10">
+        <div className="flex flex-wrap items-center justify-between mb-4 border-b border-slate-800/80 pb-3.5 gap-2 relative z-10">
           <div className="flex items-center gap-2.5">
             <motion.div
               whileHover={{ rotate: 180, scale: 1.1 }}
@@ -161,95 +253,317 @@ export const SectorDistributionChart: React.FC<SectorDistributionChartProps> = (
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => setChartView(chartView === 'recharts' ? 'compact' : 'recharts')}
+              onClick={() => setChartView(chartView === 'chart' ? 'spectrum' : 'chart')}
               className="text-[11px] font-mono text-slate-300 hover:text-cyan-300 transition-all flex items-center gap-1.5 bg-slate-900/90 px-3 py-1.5 rounded-md border border-slate-700 hover:border-cyan-500/50 shadow-sm"
             >
-              <BarChart2 className="w-3.5 h-3.5 text-cyan-400" />
-              <span>{chartView === 'recharts' ? 'Matrix View' : 'Interactive Spectrum'}</span>
+              {chartView === 'chart' ? (
+                <>
+                  <BarChart2 className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Interactive Spectrum</span>
+                </>
+              ) : (
+                <>
+                  <BarChart3 className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Dual Series View</span>
+                </>
+              )}
             </motion.button>
           </div>
         </div>
 
         {/* Main Graph Content with AnimatePresence */}
         <AnimatePresence mode="wait">
-          {chartView === 'recharts' ? (
+          {chartView === 'chart' ? (
             <motion.div
-              key="recharts-view"
+              key="dual-series-view"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25 }}
-              className="h-[230px] w-full pt-1 relative z-10"
+              transition={{ duration: 0.3 }}
+              className="min-h-[440px] w-full relative z-10 flex flex-col items-center justify-between bg-slate-950/80 rounded-xl p-4 border border-slate-800/90 shadow-2xl space-y-3"
             >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={sectorChartData}
-                  layout="vertical"
-                  margin={{ top: 5, right: 25, left: 10, bottom: 5 }}
-                >
-                  <defs>
-                    {/* Default Futuristic Neon Cyan-to-Blue Bar Gradient */}
-                    <linearGradient id="cyberCyanGradient" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#0891b2" stopOpacity={0.9} />
-                      <stop offset="60%" stopColor="#06b6d4" stopOpacity={0.95} />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={1} />
-                    </linearGradient>
-
-                    {/* Selected Active Neon Amber-to-Rose Bar Gradient */}
-                    <linearGradient id="cyberAmberGradient" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#d97706" stopOpacity={0.9} />
-                      <stop offset="70%" stopColor="#f59e0b" stopOpacity={1} />
-                      <stop offset="100%" stopColor="#f43f5e" stopOpacity={1} />
-                    </linearGradient>
-
-                    {/* Glow filter */}
-                    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#06b6d4" floodOpacity={0.5} />
-                    </filter>
-                  </defs>
-
-                  <CartesianGrid horizontal={false} stroke="#1e293b" strokeDasharray="3 3" />
-                  <XAxis type="number" stroke="#64748b" fontSize={10} tickLine={false} axisLine={{ stroke: '#334155' }} />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    stroke="#94a3b8"
-                    fontSize={11}
-                    tickLine={false}
-                    axisLine={false}
-                    width={140}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar
-                    dataKey="count"
-                    cursor="pointer"
-                    radius={[0, 4, 4, 0]}
-                    onClick={(entry) => onSelectSector(selectedSector === entry.name ? '' : entry.name)}
+              {/* Dual Series Sub-Controls & Quick Stats Header */}
+              <div className="w-full flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+                {/* Sub-mode Selector Tabs */}
+                <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-md border border-slate-800 font-mono text-[11px]">
+                  <button
+                    onClick={() => setDualSeriesSubMode('line')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded transition-all ${
+                      dualSeriesSubMode === 'line'
+                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
                   >
-                    {sectorChartData.map((entry) => {
-                      const isSelected = selectedSector === entry.name;
-                      return (
-                        <Cell
-                          key={`cell-${entry.name}`}
-                          fill={isSelected ? 'url(#cyberAmberGradient)' : 'url(#cyberCyanGradient)'}
-                          stroke={isSelected ? '#fef08a' : '#38bdf8'}
-                          strokeWidth={isSelected ? 1.5 : 0.5}
-                          className="transition-all duration-300 hover:opacity-90"
-                        />
-                      );
-                    })}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+                    <LineChartIcon className="w-3 h-3 text-cyan-400" />
+                    <span>Line Graph</span>
+                  </button>
+                  <button
+                    onClick={() => setDualSeriesSubMode('grouped')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded transition-all ${
+                      dualSeriesSubMode === 'grouped'
+                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <BarChart2 className="w-3 h-3" />
+                    <span>Grouped</span>
+                  </button>
+                  <button
+                    onClick={() => setDualSeriesSubMode('stacked')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded transition-all ${
+                      dualSeriesSubMode === 'stacked'
+                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <Layers className="w-3 h-3" />
+                    <span>Stacked</span>
+                  </button>
+                  <button
+                    onClick={() => setDualSeriesSubMode('area')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded transition-all ${
+                      dualSeriesSubMode === 'area'
+                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <TrendingUp className="w-3 h-3" />
+                    <span>Area</span>
+                  </button>
+                </div>
+
+                {/* Series Badges */}
+                <div className="flex items-center gap-4 text-[11px] font-mono">
+                  <div className="flex items-center gap-2 bg-slate-950 px-2.5 py-1 rounded border border-sky-800/40">
+                    <span className="w-2.5 h-2.5 bg-sky-500 rounded-xs border border-sky-300 shadow-[0_0_6px_rgba(56,189,248,0.8)]" />
+                    <span className="text-sky-300 font-semibold">Series 1: MSS ({totalMssHits})</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-slate-950 px-2.5 py-1 rounded border border-orange-800/40">
+                    <span className="w-2.5 h-2.5 bg-orange-500 rounded-xs border border-orange-300 shadow-[0_0_6px_rgba(251,146,60,0.8)]" />
+                    <span className="text-orange-300 font-semibold">Series 2: PLA ({totalPlaHits})</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Selection Filter Indicator */}
+              {selectedSector && (
+                <div className="w-full flex items-center justify-between bg-amber-950/30 border border-amber-500/50 px-3 py-1.5 rounded-lg font-mono text-xs text-amber-300">
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-spin" />
+                    Filtering View: <strong className="text-amber-200">{selectedSector}</strong>
+                  </span>
+                  <button
+                    onClick={() => onSelectSector('')}
+                    className="flex items-center gap-1 text-[10px] bg-amber-900/60 hover:bg-amber-900 text-amber-200 px-2 py-0.5 rounded border border-amber-700/60 transition-all"
+                  >
+                    <X className="w-3 h-3" /> Clear Filter
+                  </button>
+                </div>
+              )}
+
+              {/* Dual Series Chart Renderers */}
+              <div className="h-[340px] w-full pt-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  {dualSeriesSubMode === 'line' ? (
+                    <LineChart
+                      data={sectorChartData}
+                      margin={{ top: 15, right: 30, left: 10, bottom: 85 }}
+                    >
+                      <defs>
+                        <filter id="lineGlowCyan" x="-20%" y="-20%" width="140%" height="140%">
+                          <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#38bdf8" floodOpacity={0.8} />
+                        </filter>
+                        <filter id="lineGlowOrange" x="-20%" y="-20%" width="140%" height="140%">
+                          <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#fb923c" floodOpacity={0.8} />
+                        </filter>
+                      </defs>
+                      <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="name"
+                        stroke="#64748b"
+                        tickLine={false}
+                        interval={0}
+                        height={80}
+                        tick={<CustomXAxisTick />}
+                      />
+                      <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={{ stroke: '#334155' }} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Line
+                        type="monotone"
+                        dataKey="mssCount"
+                        name="Series 1 (MSS / Civilian)"
+                        stroke="#38bdf8"
+                        strokeWidth={3}
+                        filter="url(#lineGlowCyan)"
+                        dot={{ r: 4.5, fill: '#0284c7', stroke: '#38bdf8', strokeWidth: 2 }}
+                        activeDot={{ r: 8, fill: '#38bdf8', stroke: '#ffffff', strokeWidth: 2.5 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="plaCount"
+                        name="Series 2 (PLA / Military)"
+                        stroke="#fb923c"
+                        strokeWidth={3}
+                        filter="url(#lineGlowOrange)"
+                        dot={{ r: 4.5, fill: '#ea580c', stroke: '#fb923c', strokeWidth: 2 }}
+                        activeDot={{ r: 8, fill: '#fb923c', stroke: '#ffffff', strokeWidth: 2.5 }}
+                      />
+                    </LineChart>
+                  ) : dualSeriesSubMode === 'area' ? (
+                    <AreaChart
+                      data={sectorChartData}
+                      margin={{ top: 10, right: 30, left: 10, bottom: 85 }}
+                    >
+                      <defs>
+                        <linearGradient id="mssAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="#0284c7" stopOpacity={0.05} />
+                        </linearGradient>
+                        <linearGradient id="plaAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#fb923c" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="#ea580c" stopOpacity={0.05} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="name"
+                        stroke="#64748b"
+                        tickLine={false}
+                        interval={0}
+                        height={80}
+                        tick={<CustomXAxisTick />}
+                      />
+                      <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={{ stroke: '#334155' }} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Area
+                        type="monotone"
+                        dataKey="mssCount"
+                        name="Series 1 (MSS / Civilian)"
+                        stroke="#38bdf8"
+                        strokeWidth={2.5}
+                        fillOpacity={1}
+                        fill="url(#mssAreaGrad)"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="plaCount"
+                        name="Series 2 (PLA / Military)"
+                        stroke="#fb923c"
+                        strokeWidth={2.5}
+                        fillOpacity={1}
+                        fill="url(#plaAreaGrad)"
+                      />
+                    </AreaChart>
+                  ) : dualSeriesSubMode === 'stacked' ? (
+                    <BarChart
+                      layout="vertical"
+                      data={sectorChartData}
+                      margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
+                    >
+                      <defs>
+                        <linearGradient id="mssSeriesGrad" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#0284c7" stopOpacity={0.9} />
+                          <stop offset="100%" stopColor="#38bdf8" stopOpacity={1} />
+                        </linearGradient>
+                        <linearGradient id="plaSeriesGrad" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#ea580c" stopOpacity={0.9} />
+                          <stop offset="100%" stopColor="#fb923c" stopOpacity={1} />
+                        </linearGradient>
+                      </defs>
+
+                      <CartesianGrid horizontal={false} stroke="#1e293b" strokeDasharray="3 3" />
+                      <XAxis type="number" stroke="#64748b" fontSize={10} tickLine={false} axisLine={{ stroke: '#334155' }} />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        stroke="#cbd5e1"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
+                        width={150}
+                        tick={{ fill: '#e2e8f0', fontSize: 11, fontFamily: 'monospace' }}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar
+                        dataKey="mssCount"
+                        name="Series 1 (MSS / Civilian)"
+                        stackId="a"
+                        fill="url(#mssSeriesGrad)"
+                        cursor="pointer"
+                        onClick={(entry) => onSelectSector(selectedSector === entry.name ? '' : entry.name)}
+                      />
+                      <Bar
+                        dataKey="plaCount"
+                        name="Series 2 (PLA / Military)"
+                        stackId="a"
+                        fill="url(#plaSeriesGrad)"
+                        radius={[0, 4, 4, 0]}
+                        cursor="pointer"
+                        onClick={(entry) => onSelectSector(selectedSector === entry.name ? '' : entry.name)}
+                      />
+                    </BarChart>
+                  ) : (
+                    /* Grouped Side-by-Side Dual Series Bar Chart */
+                    <BarChart
+                      layout="vertical"
+                      data={sectorChartData}
+                      margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
+                      barGap={4}
+                      barCategoryGap={8}
+                    >
+                      <defs>
+                        <linearGradient id="mssSeriesGrad" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#0284c7" stopOpacity={0.9} />
+                          <stop offset="100%" stopColor="#38bdf8" stopOpacity={1} />
+                        </linearGradient>
+                        <linearGradient id="plaSeriesGrad" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#ea580c" stopOpacity={0.9} />
+                          <stop offset="100%" stopColor="#fb923c" stopOpacity={1} />
+                        </linearGradient>
+                      </defs>
+
+                      <CartesianGrid horizontal={false} stroke="#1e293b" strokeDasharray="3 3" />
+                      <XAxis type="number" stroke="#64748b" fontSize={10} tickLine={false} axisLine={{ stroke: '#334155' }} />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        stroke="#cbd5e1"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
+                        width={150}
+                        tick={{ fill: '#e2e8f0', fontSize: 11, fontFamily: 'monospace' }}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar
+                        dataKey="mssCount"
+                        name="Series 1 (MSS / Civilian)"
+                        fill="url(#mssSeriesGrad)"
+                        radius={[0, 4, 4, 0]}
+                        cursor="pointer"
+                        onClick={(entry) => onSelectSector(selectedSector === entry.name ? '' : entry.name)}
+                      />
+                      <Bar
+                        dataKey="plaCount"
+                        name="Series 2 (PLA / Military)"
+                        fill="url(#plaSeriesGrad)"
+                        radius={[0, 4, 4, 0]}
+                        cursor="pointer"
+                        onClick={(entry) => onSelectSector(selectedSector === entry.name ? '' : entry.name)}
+                      />
+                    </BarChart>
+                  )}
+                </ResponsiveContainer>
+              </div>
             </motion.div>
           ) : (
             <motion.div
-              key="compact-view"
+              key="spectrum-view"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.25 }}
-              className="space-y-3 max-h-[230px] overflow-y-auto pr-2 relative z-10"
+              className="space-y-3 max-h-[380px] overflow-y-auto pr-2 relative z-10"
             >
               {sortedSectors.map(([sector, count], idx) => {
                 const percentage = Math.round((count / maxCount) * 100);
@@ -302,7 +616,7 @@ export const SectorDistributionChart: React.FC<SectorDistributionChartProps> = (
         <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400 relative z-10">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-            <span>EXPOSURE MATRIX: Active Spectrum Filtering</span>
+            <span>EXPOSURE MATRIX: Dual Series Vector Analytics</span>
           </div>
           <span className="text-slate-400 hidden sm:inline">
             Click any sector bar to isolate target profile records
