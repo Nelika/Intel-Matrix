@@ -3,9 +3,9 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
   return {
-    base: process.env.GITHUB_ACTIONS ? '/Intel-Matrix/' : './',
+    base: mode === 'production' || process.env.GITHUB_ACTIONS ? '/Intel-Matrix/' : '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
