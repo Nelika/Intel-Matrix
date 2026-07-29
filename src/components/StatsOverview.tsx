@@ -32,84 +32,84 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ data }) => {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
       
       {/* Total APT Groups */}
-      <div className="bg-[#16161a] border border-[#2d1215] p-6 rounded-none flex flex-col justify-between relative group hover:border-[#ef4444]/60 transition-all shadow-lg">
+      <div className="bg-white border border-slate-200 p-6 rounded-xl flex flex-col justify-between relative group hover:border-blue-400 hover:shadow-md transition-all shadow-sm">
         <div>
-          <div className="w-8 h-[2px] bg-[#ef4444] mb-3"></div>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#a1a1aa] font-medium flex items-center gap-1.5 font-mono">
-            <Shield className="w-3.5 h-3.5 text-[#ef4444]" />
+          <div className="w-8 h-1 bg-blue-600 rounded-full mb-3"></div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500 font-semibold flex items-center gap-1.5 font-mono">
+            <Shield className="w-3.5 h-3.5 text-blue-600" />
             Tracked Threat Groups
           </p>
         </div>
         <div className="my-3">
-          <span className="text-4xl font-serif text-[#f8fafc] font-light">{total}</span>
-          <span className="text-sm font-serif italic text-[#f59e0b] ml-1.5 font-normal">APTs</span>
+          <span className="text-4xl font-serif text-slate-900 font-bold">{total}</span>
+          <span className="text-sm font-serif italic text-blue-600 ml-2 font-normal">APTs</span>
         </div>
-        <p className="text-xs text-[#71717a] leading-relaxed">
+        <p className="text-xs text-slate-500 leading-relaxed">
           Cataloged MITRE ATT&CK state-sponsored threat actors
         </p>
       </div>
 
       {/* Primary State Sponsors */}
-      <div className="bg-[#16161a] border border-[#2d1215] p-6 rounded-none flex flex-col justify-between relative group hover:border-[#ef4444]/60 transition-all shadow-lg">
+      <div className="bg-white border border-slate-200 p-6 rounded-xl flex flex-col justify-between relative group hover:border-blue-400 hover:shadow-md transition-all shadow-sm">
         <div>
-          <div className="w-8 h-[2px] bg-[#f59e0b] mb-3"></div>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#a1a1aa] font-medium flex items-center gap-1.5 font-mono">
-            <Landmark className="w-3.5 h-3.5 text-[#f59e0b]" />
+          <div className="w-8 h-1 bg-amber-500 rounded-full mb-3"></div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500 font-semibold flex items-center gap-1.5 font-mono">
+            <Landmark className="w-3.5 h-3.5 text-amber-600" />
             Sponsoring State Split
           </p>
         </div>
         <div className="my-3 flex items-baseline gap-2 font-serif">
           <div>
-            <span className="text-3xl font-light text-[#f8fafc]">{mssCount}</span>
-            <span className="text-xs text-[#ef4444] font-sans font-bold uppercase tracking-wider ml-1">MSS</span>
+            <span className="text-3xl font-bold text-slate-900">{mssCount}</span>
+            <span className="text-xs text-rose-600 font-sans font-bold uppercase tracking-wider ml-1">MSS</span>
           </div>
-          <span className="text-[#52525b]">/</span>
+          <span className="text-slate-300">/</span>
           <div>
-            <span className="text-2xl font-light text-[#e2e8f0]">{plaCount}</span>
-            <span className="text-xs text-[#f59e0b] font-sans font-bold uppercase tracking-wider ml-1">PLA</span>
+            <span className="text-2xl font-bold text-slate-700">{plaCount}</span>
+            <span className="text-xs text-amber-600 font-sans font-bold uppercase tracking-wider ml-1">PLA</span>
           </div>
-          <span className="text-[#52525b]">/</span>
+          <span className="text-slate-300">/</span>
           <div>
-            <span className="text-xl font-light text-[#a1a1aa]">{jointCount}</span>
-            <span className="text-xs text-[#71717a] font-sans uppercase tracking-wider ml-1">Joint</span>
+            <span className="text-xl font-bold text-slate-500">{jointCount}</span>
+            <span className="text-xs text-slate-500 font-sans uppercase tracking-wider ml-1">Joint</span>
           </div>
         </div>
-        <p className="text-xs text-[#71717a] leading-relaxed">
+        <p className="text-xs text-slate-500 leading-relaxed">
           Civilian Intelligence (MSS) vs Military PLA Units
         </p>
       </div>
 
       {/* Enforcement & Indictments */}
-      <div className="bg-[#16161a] border border-[#2d1215] p-6 rounded-none flex flex-col justify-between relative group hover:border-[#ef4444]/60 transition-all shadow-lg">
+      <div className="bg-white border border-slate-200 p-6 rounded-xl flex flex-col justify-between relative group hover:border-blue-400 hover:shadow-md transition-all shadow-sm">
         <div>
-          <div className="w-8 h-[2px] bg-[#ef4444] mb-3"></div>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#a1a1aa] font-medium flex items-center gap-1.5 font-mono">
-            <Scale className="w-3.5 h-3.5 text-[#ef4444]" />
+          <div className="w-8 h-1 bg-indigo-600 rounded-full mb-3"></div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500 font-semibold flex items-center gap-1.5 font-mono">
+            <Scale className="w-3.5 h-3.5 text-indigo-600" />
             Legal Enforcement
           </p>
         </div>
         <div className="my-3 flex items-baseline gap-3 font-serif">
           <div>
-            <span className="text-3xl font-light text-[#f8fafc]">{indictmentCount}</span>
-            <span className="text-xs text-[#ef4444] font-sans font-bold uppercase tracking-wider ml-1">DOJ</span>
+            <span className="text-3xl font-bold text-slate-900">{indictmentCount}</span>
+            <span className="text-xs text-rose-600 font-sans font-bold uppercase tracking-wider ml-1">DOJ</span>
           </div>
-          <span className="text-[#52525b]">|</span>
+          <span className="text-slate-300">|</span>
           <div>
-            <span className="text-2xl font-light text-[#e2e8f0]">{sanctionCount}</span>
-            <span className="text-xs text-[#f59e0b] font-sans font-bold uppercase tracking-wider ml-1">OFAC</span>
+            <span className="text-2xl font-bold text-slate-700">{sanctionCount}</span>
+            <span className="text-xs text-indigo-600 font-sans font-bold uppercase tracking-wider ml-1">OFAC</span>
           </div>
         </div>
-        <p className="text-xs text-[#71717a] leading-relaxed">
+        <p className="text-xs text-slate-500 leading-relaxed">
           Unsealed US DOJ indictments, Treasury & EU sanctions
         </p>
       </div>
 
       {/* Top Targeted Sector Focus */}
-      <div className="bg-[#991b1b] p-6 rounded-none flex flex-col justify-between text-[#fef2f2] shadow-xl border border-[#b91c1c]">
+      <div className="bg-gradient-to-br from-blue-900 to-indigo-950 p-6 rounded-xl flex flex-col justify-between text-white shadow-md border border-blue-900">
         <div>
-          <div className="w-8 h-[2px] bg-[#f59e0b] mb-3"></div>
-          <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#fef2f2]/90 flex items-center gap-1.5 font-mono">
-            <Cpu className="w-3.5 h-3.5 text-[#f59e0b]" />
+          <div className="w-8 h-1 bg-sky-400 rounded-full mb-3"></div>
+          <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-sky-200 flex items-center gap-1.5 font-mono">
+            <Cpu className="w-3.5 h-3.5 text-sky-400" />
             Primary Target Sectors
           </p>
         </div>
@@ -117,13 +117,13 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ data }) => {
           {sortedSectors.map(([sector, count]) => (
             <span
               key={sector}
-              className="text-[10px] font-mono px-2 py-0.5 bg-[#450a0a]/60 border border-[#f59e0b]/30 text-[#fef2f2] font-semibold"
+              className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 border border-white/20 text-white font-semibold backdrop-blur-sm"
             >
-              {sector} <span className="font-bold text-[#f59e0b]">({count})</span>
+              {sector} <span className="font-bold text-sky-300">({count})</span>
             </span>
           ))}
         </div>
-        <p className="text-xs font-medium text-[#fef2f2]/80 leading-relaxed">
+        <p className="text-xs font-medium text-slate-300 leading-relaxed">
           Highest frequency operational targets
         </p>
       </div>
