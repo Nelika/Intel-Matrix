@@ -20,6 +20,8 @@ export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose }) 
 
   const copyAsMarkdown = () => {
     const md = `### Threat Intel Dossier: ${apt.classification} (${apt.id})
+- **Microsoft Taxonomy:** ${apt.microsoftTaxonomy}
+- **Kaspersky Tracking:** ${apt.kasperskySecurelist}
 - **Aliases:** ${apt.aliases.join(', ')}
 - **Sponsoring Authority:** ${apt.sponsoringAuthority} (${apt.sponsoringOrgType})
 - **Front Entity:** ${apt.frontCompany}
@@ -78,7 +80,83 @@ export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose }) 
 
         {/* Content Breakdown */}
         <div className="space-y-4 text-sm">
+
+          {/* Operational Lifecycle Status Banner */}
+          <div className="p-4 bg-slate-900 text-white rounded-lg font-mono">
+            <div className="flex items-center justify-between gap-2 mb-2 border-b border-slate-800 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] uppercase font-bold text-slate-400">Current Status:</span>
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-xs font-bold flex items-center gap-1.5 ${
+                    apt.currentStatus === 'Active'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                      : apt.currentStatus === 'Intermittent'
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                      : 'bg-slate-800 text-slate-300 border border-slate-700'
+                  }`}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      apt.currentStatus === 'Active'
+                        ? 'bg-emerald-400 animate-pulse'
+                        : apt.currentStatus === 'Intermittent'
+                        ? 'bg-amber-400'
+                        : 'bg-slate-500'
+                    }`}
+                  />
+                  <span>{apt.currentStatus}</span>
+                </span>
+              </div>
+              <div className="text-xs text-slate-400">
+                Observed: <strong className="text-white">{apt.firstObservedYear} – {apt.lastObservedYear}</strong>
+              </div>
+            </div>
+
+            {/* Lifecycle Spans Breakdown */}
+            <div className="space-y-1.5 mt-2">
+              <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">Activity Periods:</div>
+              {apt.spans.map((span, sIdx) => (
+                <div key={sIdx} className="flex items-center justify-between text-xs bg-slate-800/80 px-2.5 py-1 rounded border border-slate-700">
+                  <div className="flex items-center gap-2 truncate">
+                    <span
+                      className={`w-2 h-2 rounded-full shrink-0 ${
+                        span.status === 'surge'
+                          ? 'bg-emerald-400'
+                          : span.status === 'active'
+                          ? 'bg-cyan-400'
+                          : 'bg-slate-500'
+                      }`}
+                    />
+                    <span className="truncate text-slate-200">{span.label || span.status}</span>
+                  </div>
+                  <span className="text-slate-400 shrink-0 font-semibold text-[11px]">
+                    {span.startYear} – {span.endYear}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
           
+          {/* Microsoft & Kaspersky Taxonomy Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-3.5 bg-cyan-50/70 border border-cyan-200 rounded-lg">
+              <div className="text-[10px] font-mono uppercase text-cyan-800 font-bold tracking-wider mb-1">
+                Microsoft Taxonomy
+              </div>
+              <div className="text-xs font-mono font-bold text-slate-900">
+                {apt.microsoftTaxonomy}
+              </div>
+            </div>
+            <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-lg">
+              <div className="text-[10px] font-mono uppercase text-emerald-800 font-bold tracking-wider mb-1">
+                Kaspersky / Securelist Tracking
+              </div>
+              <div className="text-xs font-mono font-bold text-slate-900">
+                {apt.kasperskySecurelist}
+              </div>
+            </div>
+          </div>
+
           {/* Aliases */}
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
             <div className="text-[10px] font-mono uppercase text-slate-500 mb-2 font-bold tracking-wider">

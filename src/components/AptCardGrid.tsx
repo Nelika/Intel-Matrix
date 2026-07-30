@@ -61,9 +61,47 @@ export const AptCardGrid: React.FC<AptCardGridProps> = ({ data, onSelectApt, sea
                   </div>
                 </div>
 
-                <span className="text-[10px] font-mono px-2 py-0.5 uppercase font-semibold tracking-wider bg-indigo-50 border border-indigo-200 text-indigo-700 rounded">
-                  {apt.legalCategory}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-[10px] font-mono px-2 py-0.5 uppercase font-semibold tracking-wider bg-indigo-50 border border-indigo-200 text-indigo-700 rounded">
+                    {apt.legalCategory}
+                  </span>
+                  <span
+                    className={`text-[10px] font-mono px-2 py-0.5 font-bold rounded flex items-center gap-1 ${
+                      apt.currentStatus === 'Active'
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                        : apt.currentStatus === 'Intermittent'
+                        ? 'bg-amber-50 text-amber-800 border border-amber-300'
+                        : 'bg-slate-100 text-slate-600 border border-slate-200'
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        apt.currentStatus === 'Active'
+                          ? 'bg-emerald-500 animate-ping'
+                          : apt.currentStatus === 'Intermittent'
+                          ? 'bg-amber-500'
+                          : 'bg-slate-400'
+                      }`}
+                    />
+                    <span>{apt.currentStatus}</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Taxonomies & Tracking */}
+              <div className="mb-3 space-y-1 font-mono text-[11px]">
+                <div className="flex items-center gap-1.5 overflow-hidden text-ellipsis whitespace-nowrap">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 w-16 shrink-0">MSFT:</span>
+                  <span className="text-cyan-800 bg-cyan-50 border border-cyan-200 px-1.5 py-0.5 rounded text-[10px] font-medium truncate">
+                    {highlightMatch(apt.microsoftTaxonomy)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 overflow-hidden text-ellipsis whitespace-nowrap">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 w-16 shrink-0">Kaspersky:</span>
+                  <span className="text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-medium truncate">
+                    {highlightMatch(apt.kasperskySecurelist)}
+                  </span>
+                </div>
               </div>
 
               {/* Aliases */}

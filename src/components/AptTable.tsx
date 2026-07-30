@@ -91,9 +91,24 @@ export const AptTable: React.FC<AptTableProps> = ({
                 className="py-3.5 px-4 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[120px]"
               >
                 <div className="flex items-center gap-1.5">
-                  <span>APT / Designation</span>
+                  <span>APT / Classification</span>
                   {renderSortIcon('classification')}
                 </div>
+              </th>
+
+              {/* Status & Lifecycle Window */}
+              <th className="py-3.5 px-4 font-bold whitespace-nowrap min-w-[140px]">
+                Activity Status
+              </th>
+
+              {/* Microsoft Taxonomy */}
+              <th className="py-3.5 px-4 font-bold whitespace-nowrap min-w-[190px]">
+                Microsoft Taxonomy
+              </th>
+
+              {/* Kaspersky / Securelist Tracking */}
+              <th className="py-3.5 px-4 font-bold whitespace-nowrap min-w-[190px]">
+                Kaspersky / Securelist Tracking
               </th>
 
               {/* Major Aliases / Associated Groups */}
@@ -174,6 +189,47 @@ export const AptTable: React.FC<AptTableProps> = ({
                   <td className="py-3.5 px-4 font-serif font-bold text-slate-900 text-sm whitespace-nowrap">
                     <span className="px-2.5 py-0.5 bg-rose-50 border border-rose-200 text-rose-700 inline-block font-sans text-xs font-semibold rounded">
                       {highlightMatch(apt.classification)}
+                    </span>
+                  </td>
+
+                  {/* Status & Lifecycle Window */}
+                  <td className="py-3.5 px-4 whitespace-nowrap">
+                    <span
+                      className={`px-2.5 py-0.5 text-[11px] font-mono font-bold rounded-full inline-flex items-center gap-1.5 ${
+                        apt.currentStatus === 'Active'
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : apt.currentStatus === 'Intermittent'
+                          ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                          : 'bg-slate-100 text-slate-600 border border-slate-200'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          apt.currentStatus === 'Active'
+                            ? 'bg-emerald-500 animate-ping'
+                            : apt.currentStatus === 'Intermittent'
+                            ? 'bg-amber-500'
+                            : 'bg-slate-400'
+                        }`}
+                      />
+                      <span>{apt.currentStatus}</span>
+                    </span>
+                    <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                      {apt.firstObservedYear}–{apt.lastObservedYear}
+                    </div>
+                  </td>
+
+                  {/* Microsoft Taxonomy */}
+                  <td className="py-3.5 px-4 text-slate-700 font-mono text-[11px] max-w-xs">
+                    <span className="px-2 py-0.5 bg-cyan-50 border border-cyan-200 text-cyan-800 rounded font-medium inline-block">
+                      {highlightMatch(apt.microsoftTaxonomy)}
+                    </span>
+                  </td>
+
+                  {/* Kaspersky / Securelist Tracking */}
+                  <td className="py-3.5 px-4 text-slate-700 font-mono text-[11px] max-w-xs">
+                    <span className="px-2 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded font-medium inline-block">
+                      {highlightMatch(apt.kasperskySecurelist)}
                     </span>
                   </td>
 

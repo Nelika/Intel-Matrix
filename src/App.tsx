@@ -6,6 +6,8 @@ import { StatsOverview } from './components/StatsOverview';
 import { FilterToolbar } from './components/FilterToolbar';
 import { AptTable } from './components/AptTable';
 import { AptCardGrid } from './components/AptCardGrid';
+import { AptTimeline } from './components/AptTimeline';
+import { AptActivityGraph } from './components/AptActivityGraph';
 import { AptDetailModal } from './components/AptDetailModal';
 import { SectorDistributionChart } from './components/SectorDistributionChart';
 import { ShieldCheck, BarChart2, Eye, EyeOff, Lock, ExternalLink } from 'lucide-react';
@@ -21,7 +23,7 @@ export default function App() {
   const [sortField, setSortField] = useState<SortField>('id');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [selectedApt, setSelectedApt] = useState<AptGroup | null>(null);
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'timeline' | 'graph'>('table');
   const [showCharts, setShowCharts] = useState<boolean>(true);
 
   // Update filter helper
@@ -65,6 +67,8 @@ export default function App() {
         const query = filters.searchQuery.toLowerCase().trim();
         const matchesId = apt.id.toLowerCase().includes(query);
         const matchesClass = apt.classification.toLowerCase().includes(query);
+        const matchesMsft = apt.microsoftTaxonomy.toLowerCase().includes(query);
+        const matchesKaspersky = apt.kasperskySecurelist.toLowerCase().includes(query);
         const matchesAlias = apt.aliases.some((a) => a.toLowerCase().includes(query));
         const matchesSponsor = apt.sponsoringAuthority.toLowerCase().includes(query);
         const matchesFront = apt.frontCompany.toLowerCase().includes(query);
@@ -74,6 +78,8 @@ export default function App() {
         if (
           !matchesId &&
           !matchesClass &&
+          !matchesMsft &&
+          !matchesKaspersky &&
           !matchesAlias &&
           !matchesSponsor &&
           !matchesFront &&
@@ -191,8 +197,20 @@ export default function App() {
             onSelectApt={(apt) => setSelectedApt(apt)}
             searchQuery={filters.searchQuery}
           />
-        ) : (
+        ) : viewMode === 'grid' ? (
           <AptCardGrid
+            data={filteredData}
+            onSelectApt={(apt) => setSelectedApt(apt)}
+            searchQuery={filters.searchQuery}
+          />
+        ) : viewMode === 'timeline' ? (
+          <AptTimeline
+            data={filteredData}
+            onSelectApt={(apt) => setSelectedApt(apt)}
+            searchQuery={filters.searchQuery}
+          />
+        ) : (
+          <AptActivityGraph
             data={filteredData}
             onSelectApt={(apt) => setSelectedApt(apt)}
             searchQuery={filters.searchQuery}

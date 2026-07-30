@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Filter, X, LayoutGrid, Table, RefreshCw } from 'lucide-react';
+import { Search, Filter, X, LayoutGrid, Table, RefreshCw, Clock, Activity } from 'lucide-react';
 import { FilterState } from '../types';
 
 interface FilterToolbarProps {
@@ -8,8 +8,8 @@ interface FilterToolbarProps {
   onResetFilters: () => void;
   allSectors: string[];
   allSponsors: string[];
-  viewMode: 'table' | 'grid';
-  onViewModeChange: (mode: 'table' | 'grid') => void;
+  viewMode: 'table' | 'grid' | 'timeline' | 'graph';
+  onViewModeChange: (mode: 'table' | 'grid' | 'timeline' | 'graph') => void;
   activeFilterCount: number;
 }
 
@@ -84,6 +84,28 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
             >
               <LayoutGrid className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Card Grid</span>
+            </button>
+            <button
+              onClick={() => onViewModeChange('timeline')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono rounded transition-all ${
+                viewMode === 'timeline'
+                  ? 'bg-blue-600 text-white font-bold shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Legal Timeline</span>
+            </button>
+            <button
+              onClick={() => onViewModeChange('graph')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono rounded transition-all ${
+                viewMode === 'graph'
+                  ? 'bg-blue-600 text-white font-bold shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Activity Graph</span>
             </button>
           </div>
 
