@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { AnimatePresence } from 'motion/react';
 import { APT_GROUPS, ALL_SECTORS, ALL_SPONSORS } from './data/aptData';
 import { AptGroup, FilterState, SortField, SortOrder } from './types';
 import { Header } from './components/Header';
@@ -10,9 +11,11 @@ import { AptTimeline } from './components/AptTimeline';
 import { AptActivityGraph } from './components/AptActivityGraph';
 import { AptDetailModal } from './components/AptDetailModal';
 import { SectorDistributionChart } from './components/SectorDistributionChart';
+import { VintageTerminalLoading } from './components/VintageTerminalLoading';
 import { ShieldCheck, BarChart2, Eye, EyeOff, Lock, ExternalLink } from 'lucide-react';
 
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: '',
     sponsoringOrgType: '',
@@ -259,6 +262,16 @@ export default function App() {
 
       {/* Detail Modal */}
       <AptDetailModal apt={selectedApt} onClose={() => setSelectedApt(null)} />
+
+      {/* Vintage Terminal Loading Screen */}
+      <AnimatePresence>
+        {isLoading && (
+          <VintageTerminalLoading
+            key="vintage-terminal"
+            onComplete={() => setIsLoading(false)}
+          />
+        )}
+      </AnimatePresence>
 
     </div>
   );
