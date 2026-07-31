@@ -1,5 +1,5 @@
 import React from 'react';
-import { AptGroup } from '../types';
+import { AptGroup, getMitreUrl } from '../types';
 import { ExternalLink, Shield, Building, Globe, Scale, ArrowRight } from 'lucide-react';
 
 interface AptCardGridProps {
@@ -49,7 +49,7 @@ export const AptCardGrid: React.FC<AptCardGridProps> = ({ data, onSelectApt, sea
                       {highlightMatch(apt.classification)}
                     </span>
                     <a
-                      href={`https://attack.mitre.org/groups/${apt.id}/`}
+                      href={getMitreUrl(apt)}
                       target="_blank"
                       rel="noreferrer"
                       onClick={(e) => e.stopPropagation()}

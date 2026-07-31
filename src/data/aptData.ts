@@ -237,6 +237,7 @@ export const APT_GROUPS: AptGroup[] = [
   },
   {
     id: 'C0014',
+    mitreUrl: 'https://attack.mitre.org/campaigns/C0014/',
     classification: 'APT 20',
     microsoftTaxonomy: 'Unassigned / Storm Cluster',
     kasperskySecurelist: 'Wocao / Violin Panda / Water Pamola',

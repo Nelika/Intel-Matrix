@@ -7,6 +7,7 @@ export interface ActivitySpan {
 
 export interface AptGroup {
   id: string; // e.g. "G0006" or "C0014"
+  mitreUrl?: string; // Optional custom MITRE ATT&CK URL override
   classification: string; // e.g. "APT 1"
   microsoftTaxonomy: string; // e.g. "Legacy: BRASS (Unassigned in Weather)"
   kasperskySecurelist: string; // e.g. "Comment Crew / Unit 61398"
@@ -37,3 +38,11 @@ export interface FilterState {
   selectedSector: string;
   legalCategory: string;
 }
+
+export const getMitreUrl = (apt: AptGroup): string => {
+  if (apt.mitreUrl) return apt.mitreUrl;
+  if (apt.id.startsWith('C')) {
+    return `https://attack.mitre.org/campaigns/${apt.id}/`;
+  }
+  return `https://attack.mitre.org/groups/${apt.id}/`;
+};

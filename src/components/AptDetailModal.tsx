@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AptGroup } from '../types';
+import { AptGroup, getMitreUrl } from '../types';
 import { X, ExternalLink, ShieldAlert, Building, Globe, Scale, Copy, Check, FileText, Share2 } from 'lucide-react';
 
 interface AptDetailModalProps {
@@ -27,7 +27,7 @@ export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose }) 
 - **Front Entity:** ${apt.frontCompany}
 - **Targeted Sectors:** ${apt.rawTargetedSectors}
 - **Legal & Regulatory Actions:** ${apt.legalActions}
-- **MITRE Link:** https://attack.mitre.org/groups/${apt.id}/`;
+- **MITRE Link:** ${getMitreUrl(apt)}`;
 
     navigator.clipboard.writeText(md);
     setCopiedFormat('md');
@@ -67,12 +67,12 @@ export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose }) 
               {apt.classification}
             </h2>
             <a
-              href={`https://attack.mitre.org/groups/${apt.id}/`}
+              href={getMitreUrl(apt)}
               target="_blank"
               rel="noreferrer"
               className="text-xs font-mono text-blue-600 hover:underline flex items-center gap-1 font-semibold"
             >
-              <span>MITRE ATT&CK Group Page</span>
+              <span>MITRE ATT&CK Page</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { AptGroup, SortField, SortOrder } from '../types';
+import { AptGroup, SortField, SortOrder, getMitreUrl } from '../types';
 import { ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Shield, Copy, Check, Info } from 'lucide-react';
 
 interface AptTableProps {
@@ -172,7 +172,7 @@ export const AptTable: React.FC<AptTableProps> = ({
                   <td className="py-3.5 px-4 font-mono font-medium text-slate-800 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <a
-                        href={`https://attack.mitre.org/groups/${apt.id}/`}
+                        href={getMitreUrl(apt)}
                         target="_blank"
                         rel="noreferrer"
                         onClick={(e) => e.stopPropagation()}
