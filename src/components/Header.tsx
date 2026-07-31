@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { ShieldAlert, Download, FileCode, Radio, Database } from 'lucide-react';
 import { AptGroup } from '../types';
 
@@ -53,15 +54,24 @@ export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filte
   };
 
   return (
-    <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-30 shadow-sm">
+    <motion.header
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+      className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-30 shadow-xs"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           
           {/* Title & Status */}
           <div className="flex items-start gap-3.5">
-            <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 mt-0.5 shrink-0 shadow-sm">
+            <motion.div
+              whileHover={{ rotate: 5, scale: 1.05 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+              className="p-2.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 mt-0.5 shrink-0 shadow-xs cursor-pointer"
+            >
               <ShieldAlert className="w-6 h-6" />
-            </div>
+            </motion.div>
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-blue-700 px-2 py-0.5 rounded bg-blue-50 border border-blue-200">
@@ -83,34 +93,48 @@ export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filte
 
           {/* Action Bar */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-end md:self-auto">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 border border-slate-200 text-xs font-mono text-slate-700">
+            <motion.div
+              layout
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 border border-slate-200 text-xs font-mono text-slate-700"
+            >
               <Database className="w-3.5 h-3.5 text-blue-600" />
-              <span className="font-semibold">
+              <motion.span
+                key={filteredCount}
+                initial={{ scale: 1.2, color: '#2563eb' }}
+                animate={{ scale: 1, color: '#334155' }}
+                transition={{ duration: 0.3 }}
+                className="font-semibold"
+              >
                 {filteredCount} / {totalCount} Records
-              </span>
-            </div>
+              </motion.span>
+            </motion.div>
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={exportCSV}
               title="Export visible matrix data to CSV"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-white hover:bg-slate-50 border border-slate-200 hover:border-blue-400 text-slate-700 hover:text-blue-700 text-xs font-mono font-medium transition-all active:scale-95 shadow-sm"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-white hover:bg-slate-50 border border-slate-200 hover:border-blue-400 text-slate-700 hover:text-blue-700 text-xs font-mono font-medium transition-colors shadow-xs"
             >
               <Download className="w-3.5 h-3.5 text-blue-600" />
               <span>Export CSV</span>
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={exportJSON}
               title="Export visible matrix data to JSON"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-white hover:bg-slate-50 border border-slate-200 hover:border-blue-400 text-slate-700 hover:text-blue-700 text-xs font-mono font-medium transition-all active:scale-95 shadow-sm"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-white hover:bg-slate-50 border border-slate-200 hover:border-blue-400 text-slate-700 hover:text-blue-700 text-xs font-mono font-medium transition-colors shadow-xs"
             >
               <FileCode className="w-3.5 h-3.5 text-blue-600" />
               <span>Export JSON</span>
-            </button>
+            </motion.button>
           </div>
 
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 };
+

@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { AptGroup } from '../types';
 import { Shield, Landmark, Scale, Cpu } from 'lucide-react';
 
@@ -28,11 +29,39 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ data }) => {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 4);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.4, ease: 'easeOut' },
+    },
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8"
+    >
       
       {/* Total APT Groups */}
-      <div className="bg-white border border-slate-200 p-6 rounded-xl flex flex-col justify-between relative group hover:border-blue-400 hover:shadow-md transition-all shadow-sm">
+      <motion.div
+        variants={cardVariants}
+        whileHover={{ y: -4, transition: { duration: 0.2 } }}
+        className="bg-white border border-slate-200 p-6 rounded-xl flex flex-col justify-between relative group hover:border-blue-400 hover:shadow-md transition-shadow shadow-xs cursor-default"
+      >
         <div>
           <div className="w-8 h-1 bg-blue-600 rounded-full mb-3"></div>
           <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500 font-semibold flex items-center gap-1.5 font-mono">
@@ -41,16 +70,27 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ data }) => {
           </p>
         </div>
         <div className="my-3">
-          <span className="text-4xl font-serif text-slate-900 font-bold">{total}</span>
+          <motion.span
+            key={total}
+            initial={{ scale: 1.2, opacity: 0.5 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-4xl font-serif text-slate-900 font-bold inline-block"
+          >
+            {total}
+          </motion.span>
           <span className="text-sm font-serif italic text-blue-600 ml-2 font-normal">APTs</span>
         </div>
         <p className="text-xs text-slate-500 leading-relaxed">
           Cataloged MITRE ATT&CK state-sponsored threat actors
         </p>
-      </div>
+      </motion.div>
 
       {/* Primary State Sponsors */}
-      <div className="bg-white border border-slate-200 p-6 rounded-xl flex flex-col justify-between relative group hover:border-blue-400 hover:shadow-md transition-all shadow-sm">
+      <motion.div
+        variants={cardVariants}
+        whileHover={{ y: -4, transition: { duration: 0.2 } }}
+        className="bg-white border border-slate-200 p-6 rounded-xl flex flex-col justify-between relative group hover:border-amber-400 hover:shadow-md transition-shadow shadow-xs cursor-default"
+      >
         <div>
           <div className="w-8 h-1 bg-amber-500 rounded-full mb-3"></div>
           <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500 font-semibold flex items-center gap-1.5 font-mono">
@@ -77,10 +117,14 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ data }) => {
         <p className="text-xs text-slate-500 leading-relaxed">
           Civilian Intelligence (MSS) vs Military PLA Units
         </p>
-      </div>
+      </motion.div>
 
       {/* Enforcement & Indictments */}
-      <div className="bg-white border border-slate-200 p-6 rounded-xl flex flex-col justify-between relative group hover:border-blue-400 hover:shadow-md transition-all shadow-sm">
+      <motion.div
+        variants={cardVariants}
+        whileHover={{ y: -4, transition: { duration: 0.2 } }}
+        className="bg-white border border-slate-200 p-6 rounded-xl flex flex-col justify-between relative group hover:border-indigo-400 hover:shadow-md transition-shadow shadow-xs cursor-default"
+      >
         <div>
           <div className="w-8 h-1 bg-indigo-600 rounded-full mb-3"></div>
           <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500 font-semibold flex items-center gap-1.5 font-mono">
@@ -102,10 +146,14 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ data }) => {
         <p className="text-xs text-slate-500 leading-relaxed">
           Unsealed US DOJ indictments, Treasury & EU sanctions
         </p>
-      </div>
+      </motion.div>
 
       {/* Top Targeted Sector Focus */}
-      <div className="bg-gradient-to-br from-blue-900 to-indigo-950 p-6 rounded-xl flex flex-col justify-between text-white shadow-md border border-blue-900">
+      <motion.div
+        variants={cardVariants}
+        whileHover={{ y: -4, transition: { duration: 0.2 } }}
+        className="bg-gradient-to-br from-blue-900 to-indigo-950 p-6 rounded-xl flex flex-col justify-between text-white shadow-md border border-blue-900 cursor-default"
+      >
         <div>
           <div className="w-8 h-1 bg-sky-400 rounded-full mb-3"></div>
           <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-sky-200 flex items-center gap-1.5 font-mono">
@@ -115,19 +163,21 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ data }) => {
         </div>
         <div className="flex flex-wrap gap-1.5 my-3">
           {sortedSectors.map(([sector, count]) => (
-            <span
+            <motion.span
               key={sector}
-              className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 border border-white/20 text-white font-semibold backdrop-blur-sm"
+              whileHover={{ scale: 1.08 }}
+              className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 border border-white/20 text-white font-semibold backdrop-blur-xs cursor-pointer"
             >
               {sector} <span className="font-bold text-sky-300">({count})</span>
-            </span>
+            </motion.span>
           ))}
         </div>
         <p className="text-xs font-medium text-slate-300 leading-relaxed">
           Highest frequency operational targets
         </p>
-      </div>
+      </motion.div>
 
-    </div>
+    </motion.div>
   );
 };
+
