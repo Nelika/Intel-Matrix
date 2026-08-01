@@ -20,9 +20,11 @@ import { VintageTerminalLoading } from './components/VintageTerminalLoading';
 import { CommandPaletteModal } from './components/CommandPaletteModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { CisaIcsAdvisoriesFeed } from './components/CisaIcsAdvisoriesFeed';
-import { ShieldCheck, BarChart2, Eye, EyeOff, Lock, ExternalLink, Share2, Command, Keyboard, ShieldAlert } from 'lucide-react';
+import { AboutUsPage } from './components/AboutUsPage';
+import { ShieldCheck, BarChart2, Eye, EyeOff, Lock, ExternalLink, Share2, Command, Keyboard, ShieldAlert, Flame, Database } from 'lucide-react';
 
 export default function App() {
+  const [activePage, setActivePage] = useState<'matrix' | 'about'>('matrix');
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: '',
@@ -40,6 +42,7 @@ export default function App() {
   const [showCharts, setShowCharts] = useState<boolean>(true);
   const [showNetworkWidget, setShowNetworkWidget] = useState<boolean>(true);
   const [showCisaFeed, setShowCisaFeed] = useState<boolean>(false);
+  const [showThreatHeatmap, setShowThreatHeatmap] = useState<boolean>(false);
 
   // Command Palette & Shortcuts Modal States
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
@@ -214,6 +217,38 @@ export default function App() {
     });
   }, [filters, sortField, sortOrder]);
 
+  // Section navigation helper for Slide Menu
+  const handleNavigateToSection = (sectionId: 'cisa' | 'heatmap' | 'sector' | 'network' | 'dataset') => {
+    setActivePage('matrix');
+    if (sectionId === 'cisa') {
+      setShowCisaFeed(true);
+    } else if (sectionId === 'heatmap') {
+      setShowThreatHeatmap(true);
+    } else if (sectionId === 'sector') {
+      setShowCharts(true);
+    } else if (sectionId === 'network') {
+      setShowNetworkWidget(true);
+    }
+
+    setTimeout(() => {
+      const elementId =
+        sectionId === 'cisa' ? 'cisa-ics-feed-section' :
+        sectionId === 'heatmap' ? 'threat-heatmap-section' :
+        sectionId === 'sector' ? 'targeted-sector-exposure-section' :
+        sectionId === 'network' ? 'network-topology-section' :
+        'apt-china-dataset-section';
+
+      const el = document.getElementById(elementId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 120);
+  };
+
+  if (activePage === 'about') {
+    return <AboutUsPage onBack={() => setActivePage('matrix')} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       
@@ -232,13 +267,21 @@ export default function App() {
         }}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         onOpenShortcutsModal={() => setIsShortcutsModalOpen(true)}
+        onOpenAboutPage={() => setActivePage('about')}
+        onNavigateToSection={handleNavigateToSection}
+        sectionStatus={{
+          cisaFeed: showCisaFeed,
+          threatHeatmap: showThreatHeatmap,
+          sectorIndex: showCharts,
+          networkWidget: showNetworkWidget,
+        }}
       />
 
       {/* Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
 
         {/* Featured Top Section: CISA ICS Advisory Feed */}
-        <div className="mb-8">
+        <div id="cisa-ics-feed-section" className="mb-8 scroll-mt-28">
           <div className="flex items-center justify-between mb-3 bg-slate-950 border border-red-900/80 p-3.5 rounded-xl text-white shadow-md">
             <div className="flex items-center gap-2.5 font-mono text-xs font-bold text-red-300">
               <span className="p-1.5 rounded-lg bg-red-950 border border-red-800 text-red-400">
@@ -274,12 +317,48 @@ export default function App() {
             />
           )}
         </div>
+
+        {/* Featured Top Section 2: Threat Heatmap */}
+        <div id="threat-heatmap-section" className="mb-8 scroll-mt-28">
+          <div className="flex items-center justify-between mb-3 bg-slate-950 border border-red-900/80 p-3.5 rounded-xl text-white shadow-md">
+            <div className="flex items-center gap-2.5 font-mono text-xs font-bold text-red-300">
+              <span className="p-1.5 rounded-lg bg-red-950 border border-red-800 text-red-400">
+                <Flame className="w-4 h-4 animate-pulse" />
+              </span>
+              <span className="uppercase tracking-wider">Threat Heatmap: Industry Sector Exposure Grid</span>
+              <span className="text-[10px] bg-red-900/90 text-red-200 px-1.5 py-0.2 rounded border border-red-700 font-bold uppercase font-mono">
+                Risk Matrix
+              </span>
+            </div>
+
+            <button
+              onClick={() => setShowThreatHeatmap((prev) => !prev)}
+              className="px-3.5 py-1.5 bg-red-950 hover:bg-red-900 text-red-200 border border-red-700 hover:border-red-500 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-sm"
+            >
+              <span>Threat Heatmap ({showThreatHeatmap ? 'Active' : 'Expand'})</span>
+              {showThreatHeatmap ? (
+                <EyeOff className="w-3.5 h-3.5 text-red-400" />
+              ) : (
+                <Eye className="w-3.5 h-3.5 text-red-400" />
+              )}
+            </button>
+          </div>
+
+          {showThreatHeatmap && (
+            <ThreatHeatmap
+              aptGroups={filteredData}
+              onSelectSector={(sec) => handleFilterChange({ selectedSector: sec })}
+              selectedSector={filters.selectedSector}
+              onSelectApt={(apt) => setSelectedApt(apt)}
+            />
+          )}
+        </div>
         
         {/* KPI Stats Overview */}
         <StatsOverview data={filteredData} />
 
         {/* Analytics Chart Toggle */}
-        <div className="flex items-center justify-between mb-5 bg-white p-3.5 border border-slate-200 rounded-lg shadow-sm">
+        <div id="targeted-sector-exposure-section" className="flex items-center justify-between mb-5 bg-white p-3.5 border border-slate-200 rounded-lg shadow-sm scroll-mt-28">
           <div className="flex items-center gap-2 text-xs font-mono text-slate-800">
             <BarChart2 className="w-4 h-4 text-blue-600" />
             <span className="font-bold uppercase tracking-[0.12em] text-[11px] text-blue-700">Target Analytics & Sector Exposure Index</span>
@@ -314,18 +393,11 @@ export default function App() {
               onSelectSponsorOrg={(org) => handleFilterChange({ sponsoringOrgType: org })}
               selectedSponsorOrg={filters.sponsoringOrgType}
             />
-
-            <ThreatHeatmap
-              aptGroups={filteredData}
-              onSelectSector={(sec) => handleFilterChange({ selectedSector: sec })}
-              selectedSector={filters.selectedSector}
-              onSelectApt={(apt) => setSelectedApt(apt)}
-            />
           </div>
         )}
 
         {/* Standalone Network Topology Map Widget */}
-        <div className="mb-8">
+        <div id="network-topology-section" className="mb-8 scroll-mt-28">
           <div className="flex items-center justify-between mb-3 bg-slate-900 border border-cyan-800/80 p-3.5 rounded-xl text-white shadow-md">
             <div className="flex items-center gap-2 font-mono text-xs font-bold text-cyan-300">
               <Share2 className="w-4 h-4 text-cyan-400 animate-pulse" />
@@ -357,6 +429,24 @@ export default function App() {
               searchQuery={filters.searchQuery}
             />
           )}
+        </div>
+
+        {/* Main APT Dataset Widget */}
+        <div id="apt-china-dataset-section" className="mb-4 scroll-mt-28">
+          <div className="flex items-center justify-between bg-slate-950 border border-cyan-800/80 p-3.5 rounded-xl text-white shadow-md">
+            <div className="flex items-center gap-2.5 font-mono text-xs font-bold text-cyan-300">
+              <span className="p-1.5 rounded-lg bg-cyan-950 border border-cyan-800 text-cyan-400">
+                <Database className="w-4 h-4" />
+              </span>
+              <span className="uppercase tracking-wider">APT China (PRC) Dataset</span>
+              <span className="text-[10px] bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded border border-cyan-800 font-mono font-bold">
+                {filteredData.length} GROUPS ACTIVE
+              </span>
+            </div>
+            <div className="text-[11px] font-mono text-slate-400 hidden sm:block">
+              Primary Threat Actor Matrix &amp; Intelligence Repository
+            </div>
+          </div>
         </div>
 
         {/* Search & Filter Toolbar */}

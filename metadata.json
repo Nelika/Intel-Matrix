@@ -1,6 +1,6 @@
 {
   "name": "China APT Threat Intelligence Matrix",
-  "description": "Interactive cybersecurity threat intelligence matrix mapping APT groups, state authorities, front companies, targeted sectors, and legal actions.",
+  "description": "Interactive cybersecurity threat intelligence matrix mapping APT groups, state authorities, front companies, targeted sectors, legal actions, and integrated CISA ICS advisories.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

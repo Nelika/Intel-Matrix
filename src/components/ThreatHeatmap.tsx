@@ -97,10 +97,9 @@ export const ThreatHeatmap: React.FC<ThreatHeatmapProps> = ({
   const [cisaAdvisories, setCisaAdvisories] = useState<CisaAdvisory[]>([]);
   const [isLoadingCisa, setIsLoadingCisa] = useState<boolean>(false);
 
-  // Load CISA Advisories from local storage / API
+  // Load CISA Advisories from compiled local storage & API
   useEffect(() => {
-    const loadCisaData = async () => {
-      setIsLoadingCisa(true);
+    const reloadLocalCisa = () => {
       try {
         const saved = localStorage.getItem('cisa_ics_accumulated_advisories_v2');
         if (saved) {
@@ -109,16 +108,37 @@ export const ThreatHeatmap: React.FC<ThreatHeatmapProps> = ({
             setCisaAdvisories(parsed);
           }
         }
-        // Also fetch fresh
+      } catch (e) {
+        console.warn('ThreatHeatmap error reading accumulated CISA advisories:', e);
+      }
+    };
+
+    const loadCisaData = async () => {
+      setIsLoadingCisa(true);
+      reloadLocalCisa();
+
+      try {
         const res = await fetch('/api/cisa-advisories');
         if (res.ok) {
           const json = await res.json();
           if (json.advisories && Array.isArray(json.advisories)) {
             setCisaAdvisories((prev) => {
               const map = new Map<string, CisaAdvisory>();
-              prev.forEach((item) => map.set(item.id || item.advisoryId, item));
-              json.advisories.forEach((item: CisaAdvisory) => map.set(item.id || item.advisoryId, item));
-              return Array.from(map.values());
+              prev.forEach((item) => {
+                const key = item.advisoryId || item.id || item.link;
+                if (key) map.set(key, item);
+              });
+              json.advisories.forEach((item: CisaAdvisory) => {
+                const key = item.advisoryId || item.id || item.link;
+                if (key) map.set(key, item);
+              });
+              const compiled = Array.from(map.values());
+              try {
+                localStorage.setItem('cisa_ics_accumulated_advisories_v2', JSON.stringify(compiled));
+              } catch (e) {
+                console.warn('ThreatHeatmap failed saving compiled advisories to localStorage:', e);
+              }
+              return compiled;
             });
           }
         }
@@ -130,6 +150,14 @@ export const ThreatHeatmap: React.FC<ThreatHeatmapProps> = ({
     };
 
     loadCisaData();
+
+    window.addEventListener('storage', reloadLocalCisa);
+    window.addEventListener('cisa_data_updated', reloadLocalCisa);
+
+    return () => {
+      window.removeEventListener('storage', reloadLocalCisa);
+      window.removeEventListener('cisa_data_updated', reloadLocalCisa);
+    };
   }, []);
 
   // Helper to map APT group to threat level
@@ -146,31 +174,41 @@ export const ThreatHeatmap: React.FC<ThreatHeatmapProps> = ({
     return 'LOW';
   };
 
-  // Helper to map CISA Advisory to threat level based on CVEs / Title
+  // Helper to map CISA Advisory to threat level based on CVSS / Impact formula
   const getCisaThreatLevel = (advisory: CisaAdvisory): ThreatLevel => {
-    const titleLower = advisory.title.toLowerCase();
-    const summaryLower = advisory.summary.toLowerCase();
+    const text = `${advisory.title} ${advisory.summary}`.toLowerCase();
+    let baseScore = 6.5;
 
     if (
-      titleLower.includes('remote code execution') ||
-      titleLower.includes('unauthenticated') ||
-      summaryLower.includes('critical') ||
-      titleLower.includes('buffer overflow') ||
-      titleLower.includes('command injection')
+      text.includes('remote code execution') ||
+      text.includes('unauthenticated') ||
+      text.includes('buffer overflow') ||
+      text.includes('command injection') ||
+      text.includes('zero-day')
     ) {
-      return 'CRITICAL';
-    }
-    if (
-      titleLower.includes('denial of service') ||
-      titleLower.includes('privilege escalation') ||
-      titleLower.includes('bypass') ||
-      advisory.cves.length > 2
+      baseScore = 9.2 + Math.min(advisory.cves.length * 0.2, 0.8);
+    } else if (
+      text.includes('denial of service') ||
+      text.includes('privilege escalation') ||
+      text.includes('bypass') ||
+      text.includes('authentication')
     ) {
-      return 'HIGH';
+      baseScore = 7.8 + Math.min(advisory.cves.length * 0.2, 0.8);
+    } else if (
+      text.includes('cross-site') ||
+      text.includes('information disclosure') ||
+      text.includes('improper') ||
+      text.includes('exposure')
+    ) {
+      baseScore = 5.2 + Math.min(advisory.cves.length * 0.2, 0.8);
+    } else {
+      baseScore = 4.0 + Math.min(advisory.cves.length * 0.2, 1.0);
     }
-    if (titleLower.includes('exposure') || titleLower.includes('cross-site') || titleLower.includes('improper')) {
-      return 'MEDIUM';
-    }
+
+    const score = Math.min(Math.max(Math.round(baseScore * 10) / 10, 2.5), 10.0);
+    if (score >= 9.0) return 'CRITICAL';
+    if (score >= 7.0) return 'HIGH';
+    if (score >= 4.5) return 'MEDIUM';
     return 'LOW';
   };
 

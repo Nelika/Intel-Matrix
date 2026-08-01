@@ -12,11 +12,11 @@ const escapeCsvCell = (val: string | number | undefined | null): string => {
 };
 
 /**
- * Generates a clean filename with timestamp
+ * Generates a clean filename with record count and timestamp
  */
-const getFormattedFilename = (prefix: string, extension: string): string => {
+const getFormattedFilename = (prefix: string, recordCount: number, extension: string): string => {
   const dateStr = new Date().toISOString().split('T')[0];
-  return `${prefix}_${dateStr}.${extension}`;
+  return `${prefix}_${recordCount}_records_${dateStr}.${extension}`;
 };
 
 /**
@@ -85,7 +85,7 @@ export const exportFilteredDataToCSV = (
   const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\r\n');
   const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
 
-  const filename = customFilename || getFormattedFilename('china_apt_filtered_export', 'csv');
+  const filename = customFilename || getFormattedFilename('china_apt_filtered_export', filteredData.length, 'csv');
   triggerBlobDownload(blob, filename);
 };
 
@@ -129,7 +129,7 @@ export const exportFilteredDataToJSON = (
   const jsonContent = JSON.stringify(exportPayload, null, 2);
   const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
 
-  const filename = customFilename || getFormattedFilename('china_apt_filtered_export', 'json');
+  const filename = customFilename || getFormattedFilename('china_apt_filtered_export', filteredData.length, 'json');
   triggerBlobDownload(blob, filename);
 };
 
@@ -165,6 +165,6 @@ export const exportFilteredDataToMarkdown = (
   });
 
   const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8;' });
-  const filename = customFilename || getFormattedFilename('china_apt_threat_report', 'md');
+  const filename = customFilename || getFormattedFilename('china_apt_threat_report', filteredData.length, 'md');
   triggerBlobDownload(blob, filename);
 };

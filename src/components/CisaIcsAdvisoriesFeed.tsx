@@ -230,6 +230,7 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
 
         try {
           localStorage.setItem("cisa_ics_accumulated_advisories_v2", JSON.stringify(compiled));
+          window.dispatchEvent(new Event("cisa_data_updated"));
         } catch (e) {
           console.warn("Failed to save compiled advisories to localStorage", e);
         }
