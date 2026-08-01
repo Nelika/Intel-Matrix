@@ -159,7 +159,7 @@ export const AptTable: React.FC<AptTableProps> = ({
 
           <tbody className="divide-y divide-slate-100 font-sans text-xs">
             <AnimatePresence mode="popLayout">
-              {data.map((apt, idx) => {
+              {data.map((apt) => {
                 const isPla = apt.sponsoringOrgType === 'PLA';
                 const isMss = apt.sponsoringOrgType === 'MSS';
 
@@ -167,10 +167,14 @@ export const AptTable: React.FC<AptTableProps> = ({
                   <motion.tr
                     key={apt.id}
                     layout
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.98 }}
-                    transition={{ duration: 0.25, delay: Math.min(idx * 0.02, 0.2) }}
+                    exit={{ opacity: 0, y: -6, transition: { duration: 0.15 } }}
+                    transition={{
+                      layout: { type: 'spring', stiffness: 350, damping: 30 },
+                      opacity: { duration: 0.2 },
+                      y: { duration: 0.15 },
+                    }}
                     onClick={() => onSelectApt(apt)}
                     className="hover:bg-blue-50/70 transition-colors cursor-pointer group"
                   >

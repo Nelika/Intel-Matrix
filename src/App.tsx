@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { APT_GROUPS, ALL_SECTORS, ALL_SPONSORS } from './data/aptData';
 import { AptGroup, FilterState, SortField, SortOrder } from './types';
@@ -9,12 +9,16 @@ import { AptTable } from './components/AptTable';
 import { AptCardGrid } from './components/AptCardGrid';
 import { AptTimeline } from './components/AptTimeline';
 import { AptActivityGraph } from './components/AptActivityGraph';
+import { AptNetworkGraph } from './components/AptNetworkGraph';
+import { AptComparisonView } from './components/AptComparisonView';
 import { AptDetailModal } from './components/AptDetailModal';
 import { MitreAttackModal } from './components/MitreAttackModal';
 import { MitreAttackSection } from './components/MitreAttackSection';
 import { SectorDistributionChart } from './components/SectorDistributionChart';
 import { VintageTerminalLoading } from './components/VintageTerminalLoading';
-import { ShieldCheck, BarChart2, Eye, EyeOff, Lock, ExternalLink } from 'lucide-react';
+import { CommandPaletteModal } from './components/CommandPaletteModal';
+import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
+import { ShieldCheck, BarChart2, Eye, EyeOff, Lock, ExternalLink, Share2, Command, Keyboard } from 'lucide-react';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -30,8 +34,86 @@ export default function App() {
   const [selectedApt, setSelectedApt] = useState<AptGroup | null>(null);
   const [isMitreModalOpen, setIsMitreModalOpen] = useState<boolean>(false);
   const [mitreModalGroup, setMitreModalGroup] = useState<AptGroup | null>(null);
-  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'timeline' | 'graph' | 'mitre'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'timeline' | 'graph' | 'network' | 'mitre' | 'compare'>('table');
   const [showCharts, setShowCharts] = useState<boolean>(true);
+  const [showNetworkWidget, setShowNetworkWidget] = useState<boolean>(true);
+
+  // Command Palette & Shortcuts Modal States
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
+
+  // Global Keyboard Shortcut Event Listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+
+      // 1. Ctrl+K or Cmd+K -> Toggle Command Palette
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+        return;
+      }
+
+      // 2. ? or Shift+? -> Toggle Keyboard Shortcuts Modal (when not in input)
+      if (e.key === '?' || (e.shiftKey && e.key === '?')) {
+        if (!isInput) {
+          e.preventDefault();
+          setIsShortcutsModalOpen((prev) => !prev);
+          return;
+        }
+      }
+
+      // 3. Escape key -> Close active modal or clear search
+      if (e.key === 'Escape') {
+        if (isCommandPaletteOpen) {
+          setIsCommandPaletteOpen(false);
+          return;
+        }
+        if (isShortcutsModalOpen) {
+          setIsShortcutsModalOpen(false);
+          return;
+        }
+        if (selectedApt) {
+          setSelectedApt(null);
+          return;
+        }
+        if (isMitreModalOpen) {
+          setIsMitreModalOpen(false);
+          return;
+        }
+        if (filters.searchQuery) {
+          setFilters((prev) => ({ ...prev, searchQuery: '' }));
+          return;
+        }
+      }
+
+      // 4. View Mode Navigation shortcuts: Cmd/Ctrl + 1..7 (or 1..7 when not typing)
+      const modeMap: Record<string, 'table' | 'grid' | 'timeline' | 'graph' | 'network' | 'mitre' | 'compare'> = {
+        '1': 'table',
+        '2': 'grid',
+        '3': 'timeline',
+        '4': 'graph',
+        '5': 'network',
+        '6': 'mitre',
+        '7': 'compare',
+      };
+
+      if ((e.metaKey || e.ctrlKey) && ['1', '2', '3', '4', '5', '6', '7'].includes(e.key)) {
+        e.preventDefault();
+        setViewMode(modeMap[e.key]);
+        return;
+      }
+
+      if (!isInput && !e.metaKey && !e.ctrlKey && !e.altKey && ['1', '2', '3', '4', '5', '6', '7'].includes(e.key)) {
+        setViewMode(modeMap[e.key]);
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCommandPaletteOpen, isShortcutsModalOpen, selectedApt, isMitreModalOpen, filters.searchQuery]);
 
   // Update filter helper
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
@@ -145,6 +227,8 @@ export default function App() {
           setIsMitreModalOpen(true);
           setViewMode('mitre');
         }}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        onOpenShortcutsModal={() => setIsShortcutsModalOpen(true)}
       />
 
       {/* Container */}
@@ -182,10 +266,48 @@ export default function App() {
         {showCharts && (
           <SectorDistributionChart
             data={filteredData}
+            allData={APT_GROUPS}
             onSelectSector={(sec) => handleFilterChange({ selectedSector: sec })}
             selectedSector={filters.selectedSector}
+            onSelectSponsorOrg={(org) => handleFilterChange({ sponsoringOrgType: org })}
+            selectedSponsorOrg={filters.sponsoringOrgType}
           />
         )}
+
+        {/* Standalone Network Topology Map Widget */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3 bg-slate-900 border border-cyan-800/80 p-3.5 rounded-xl text-white shadow-md">
+            <div className="flex items-center gap-2 font-mono text-xs font-bold text-cyan-300">
+              <Share2 className="w-4 h-4 text-cyan-400 animate-pulse" />
+              <span className="uppercase tracking-wider">Network Topology & Relational Intelligence Widget</span>
+            </div>
+
+            <button
+              onClick={() => setShowNetworkWidget((prev) => !prev)}
+              className="flex items-center gap-1.5 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-200 text-xs font-mono transition-colors border border-slate-700 rounded-lg cursor-pointer"
+            >
+              {showNetworkWidget ? (
+                <>
+                  <EyeOff className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Collapse Network Widget</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Expand Network Widget</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {showNetworkWidget && (
+            <AptNetworkGraph
+              data={filteredData}
+              onSelectApt={(apt) => setSelectedApt(apt)}
+              searchQuery={filters.searchQuery}
+            />
+          )}
+        </div>
 
         {/* Search & Filter Toolbar */}
         <FilterToolbar
@@ -197,6 +319,7 @@ export default function App() {
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           activeFilterCount={activeFilterCount}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         />
 
         {/* Main Data Display */}
@@ -215,6 +338,11 @@ export default function App() {
             onSelectApt={(apt) => setSelectedApt(apt)}
             searchQuery={filters.searchQuery}
           />
+        ) : viewMode === 'compare' ? (
+          <AptComparisonView
+            data={APT_GROUPS}
+            onSelectApt={(apt) => setSelectedApt(apt)}
+          />
         ) : viewMode === 'timeline' ? (
           <AptTimeline
             data={filteredData}
@@ -223,6 +351,12 @@ export default function App() {
           />
         ) : viewMode === 'graph' ? (
           <AptActivityGraph
+            data={filteredData}
+            onSelectApt={(apt) => setSelectedApt(apt)}
+            searchQuery={filters.searchQuery}
+          />
+        ) : viewMode === 'network' ? (
+          <AptNetworkGraph
             data={filteredData}
             onSelectApt={(apt) => setSelectedApt(apt)}
             searchQuery={filters.searchQuery}
@@ -281,6 +415,25 @@ export default function App() {
         selectedGroup={mitreModalGroup}
         isOpen={isMitreModalOpen}
         onClose={() => setIsMitreModalOpen(false)}
+      />
+
+      {/* Global Command Palette Modal (Ctrl+K or ⌘K) */}
+      <CommandPaletteModal
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        data={APT_GROUPS}
+        viewMode={viewMode}
+        onViewModeChange={(mode) => setViewMode(mode)}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onResetFilters={handleResetFilters}
+        onSelectApt={(apt) => setSelectedApt(apt)}
+      />
+
+      {/* Keyboard Shortcuts Directory Modal (?) */}
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsModalOpen}
+        onClose={() => setIsShortcutsModalOpen(false)}
       />
 
       {/* Vintage Terminal Loading Screen */}

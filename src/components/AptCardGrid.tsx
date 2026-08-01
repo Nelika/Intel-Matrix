@@ -36,15 +36,19 @@ export const AptCardGrid: React.FC<AptCardGridProps> = ({ data, onSelectApt, sea
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-6"
     >
       <AnimatePresence mode="popLayout">
-        {data.map((apt, idx) => {
+        {data.map((apt) => {
           return (
             <motion.div
               key={apt.id}
               layout
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3, delay: Math.min(idx * 0.04, 0.3) }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
+              transition={{
+                layout: { type: 'spring', stiffness: 300, damping: 28 },
+                opacity: { duration: 0.2 },
+                scale: { duration: 0.2 },
+              }}
               whileHover={{ y: -6, transition: { duration: 0.2 } }}
               onClick={() => onSelectApt(apt)}
               className="bg-white border border-slate-200 hover:border-blue-400 p-6 rounded-xl shadow-xs hover:shadow-md transition-shadow duration-200 flex flex-col justify-between cursor-pointer group relative overflow-hidden"

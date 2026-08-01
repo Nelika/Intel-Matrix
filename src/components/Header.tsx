@@ -8,9 +8,18 @@ interface HeaderProps {
   filteredCount: number;
   filteredData: AptGroup[];
   onOpenMitreModal?: () => void;
+  onOpenCommandPalette?: () => void;
+  onOpenShortcutsModal?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filteredData, onOpenMitreModal }) => {
+export const Header: React.FC<HeaderProps> = ({
+  totalCount,
+  filteredCount,
+  filteredData,
+  onOpenMitreModal,
+  onOpenCommandPalette,
+  onOpenShortcutsModal,
+}) => {
   const exportCSV = () => {
     const headers = [
       'MITRE ATT&CK ID',
@@ -139,10 +148,10 @@ export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filte
           </div>
 
           {/* Action Bar */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-end md:self-auto">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0 self-end md:self-auto">
             <motion.div
               layout
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-900/90 border border-cyan-800/50 text-xs font-mono text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
+              className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-900/90 border border-cyan-800/50 text-xs font-mono text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
             >
               <Database className="w-3.5 h-3.5 text-cyan-400" />
               <motion.span
@@ -165,7 +174,7 @@ export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filte
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/60 text-cyan-300 hover:text-cyan-100 text-xs font-mono font-bold transition-all shadow-[0_0_12px_rgba(6,182,212,0.25)] cursor-pointer"
               >
                 <Terminal className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-                <span>MITRE ATT&CK SDK</span>
+                <span className="hidden sm:inline">MITRE SDK</span>
               </motion.button>
             )}
 
@@ -174,10 +183,10 @@ export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filte
               whileTap={{ scale: 0.97 }}
               onClick={exportCSV}
               title="Export visible matrix data to CSV"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-cyan-700/60 hover:border-cyan-400 text-cyan-300 hover:text-cyan-200 text-xs font-mono font-medium transition-colors shadow-[0_0_10px_rgba(6,182,212,0.15)] cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-cyan-700/60 hover:border-cyan-400 text-cyan-300 hover:text-cyan-200 text-xs font-mono font-medium transition-colors shadow-[0_0_10px_rgba(6,182,212,0.15)] cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Export CSV</span>
+              <span className="hidden sm:inline">CSV</span>
             </motion.button>
 
             <motion.button
@@ -185,10 +194,10 @@ export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filte
               whileTap={{ scale: 0.97 }}
               onClick={exportJSON}
               title="Export visible matrix data to JSON"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-cyan-700/60 hover:border-cyan-400 text-cyan-300 hover:text-cyan-200 text-xs font-mono font-medium transition-colors shadow-[0_0_10px_rgba(6,182,212,0.15)] cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-cyan-700/60 hover:border-cyan-400 text-cyan-300 hover:text-cyan-200 text-xs font-mono font-medium transition-colors shadow-[0_0_10px_rgba(6,182,212,0.15)] cursor-pointer"
             >
               <FileCode className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Export JSON</span>
+              <span className="hidden sm:inline">JSON</span>
             </motion.button>
           </div>
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Filter, X, LayoutGrid, Table, RefreshCw, Clock, Activity, Terminal } from 'lucide-react';
+import { Search, Filter, X, LayoutGrid, Table, RefreshCw, Clock, Activity, Terminal, Share2, ArrowLeftRight } from 'lucide-react';
 import { FilterState } from '../types';
 
 interface FilterToolbarProps {
@@ -9,9 +9,10 @@ interface FilterToolbarProps {
   onResetFilters: () => void;
   allSectors: string[];
   allSponsors: string[];
-  viewMode: 'table' | 'grid' | 'timeline' | 'graph' | 'mitre';
-  onViewModeChange: (mode: 'table' | 'grid' | 'timeline' | 'graph' | 'mitre') => void;
+  viewMode: 'table' | 'grid' | 'timeline' | 'graph' | 'network' | 'mitre' | 'compare';
+  onViewModeChange: (mode: 'table' | 'grid' | 'timeline' | 'graph' | 'network' | 'mitre' | 'compare') => void;
   activeFilterCount: number;
+  onOpenCommandPalette?: () => void;
 }
 
 export const FilterToolbar: React.FC<FilterToolbarProps> = ({
@@ -23,12 +24,15 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
   viewMode,
   onViewModeChange,
   activeFilterCount,
+  onOpenCommandPalette,
 }) => {
   const modes = [
     { id: 'table', label: 'Matrix Table', icon: Table },
     { id: 'grid', label: 'Card Grid', icon: LayoutGrid },
+    { id: 'compare', label: 'Compare Groups', icon: ArrowLeftRight },
     { id: 'timeline', label: 'Legal Timeline', icon: Clock },
     { id: 'graph', label: 'Activity Graph', icon: Activity },
+    { id: 'network', label: 'Network Graph', icon: Share2 },
     { id: 'mitre', label: 'MITRE ATT&CK SDK', icon: Terminal },
   ] as const;
 
@@ -47,14 +51,15 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
+            id="global-search-input"
             type="text"
             value={filters.searchQuery}
             onChange={(e) => onFilterChange({ searchQuery: e.target.value })}
             placeholder="Search APT name, MITRE ID (e.g. G0006), aliases, front company, sector..."
-            className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:bg-white font-mono rounded-lg transition-all"
+            className="w-full pl-10 pr-16 py-2 bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:bg-white font-mono rounded-lg transition-all"
           />
           <AnimatePresence>
-            {filters.searchQuery && (
+            {filters.searchQuery ? (
               <motion.button
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -62,10 +67,21 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
                 whileHover={{ scale: 1.15 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => onFilterChange({ searchQuery: '' })}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 rounded-full"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 rounded-full cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </motion.button>
+            ) : (
+              onOpenCommandPalette && (
+                <button
+                  onClick={onOpenCommandPalette}
+                  title="Open Command Palette (Ctrl+K)"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[10px] font-mono text-slate-400 bg-slate-200/80 hover:bg-slate-300 hover:text-slate-700 px-1.5 py-0.5 rounded border border-slate-300 transition-colors cursor-pointer"
+                >
+                  <kbd className="font-sans">⌘</kbd>
+                  <span>K</span>
+                </button>
+              )
             )}
           </AnimatePresence>
         </div>
