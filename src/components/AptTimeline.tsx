@@ -17,6 +17,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { AptGroup } from '../types';
+import { HorizontalSvgTimeline } from './HorizontalSvgTimeline';
 
 interface AptTimelineProps {
   data: AptGroup[];
@@ -119,9 +120,16 @@ export const AptTimeline: React.FC<AptTimelineProps> = ({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 mb-8 shadow-sm">
-      
-      {/* Timeline Controls & Header */}
+    <div className="space-y-6 mb-8">
+      {/* Horizontal SVG Vector Timeline Map */}
+      <HorizontalSvgTimeline
+        data={data}
+        onSelectApt={onSelectApt}
+      />
+
+      <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm">
+        
+        {/* Timeline Controls & Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -136,10 +144,10 @@ export const AptTimeline: React.FC<AptTimelineProps> = ({
         </div>
 
         {/* Filter Pills & Sort Button */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 max-w-full">
           
           {/* Category Selector Pills */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-mono">
+          <div className="flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-mono max-w-full">
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -158,7 +166,7 @@ export const AptTimeline: React.FC<AptTimelineProps> = ({
           {/* Chronological Toggle */}
           <button
             onClick={() => setSortAscending((prev) => !prev)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-mono rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-mono rounded-lg transition-colors shrink-0"
             title="Toggle Chronological Order"
           >
             <ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
@@ -332,6 +340,7 @@ export const AptTimeline: React.FC<AptTimelineProps> = ({
         </div>
       )}
 
+      </div>
     </div>
   );
 };

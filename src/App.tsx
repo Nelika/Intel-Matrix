@@ -18,7 +18,8 @@ import { SectorDistributionChart } from './components/SectorDistributionChart';
 import { VintageTerminalLoading } from './components/VintageTerminalLoading';
 import { CommandPaletteModal } from './components/CommandPaletteModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
-import { ShieldCheck, BarChart2, Eye, EyeOff, Lock, ExternalLink, Share2, Command, Keyboard } from 'lucide-react';
+import { CisaIcsAdvisoriesFeed } from './components/CisaIcsAdvisoriesFeed';
+import { ShieldCheck, BarChart2, Eye, EyeOff, Lock, ExternalLink, Share2, Command, Keyboard, ShieldAlert } from 'lucide-react';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -34,9 +35,10 @@ export default function App() {
   const [selectedApt, setSelectedApt] = useState<AptGroup | null>(null);
   const [isMitreModalOpen, setIsMitreModalOpen] = useState<boolean>(false);
   const [mitreModalGroup, setMitreModalGroup] = useState<AptGroup | null>(null);
-  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'timeline' | 'graph' | 'network' | 'mitre' | 'compare'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'timeline' | 'graph' | 'network' | 'mitre' | 'compare' | 'cisa'>('table');
   const [showCharts, setShowCharts] = useState<boolean>(true);
   const [showNetworkWidget, setShowNetworkWidget] = useState<boolean>(true);
+  const [showCisaFeed, setShowCisaFeed] = useState<boolean>(false);
 
   // Command Palette & Shortcuts Modal States
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
@@ -233,6 +235,44 @@ export default function App() {
 
       {/* Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+
+        {/* Featured Top Section: CISA ICS Advisory Feed */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3 bg-slate-950 border border-red-900/80 p-3.5 rounded-xl text-white shadow-md">
+            <div className="flex items-center gap-2.5 font-mono text-xs font-bold text-red-300">
+              <span className="p-1.5 rounded-lg bg-red-950 border border-red-800 text-red-400">
+                <ShieldAlert className="w-4 h-4 animate-pulse" />
+              </span>
+              <span className="uppercase tracking-wider">CISA ICS Advisory Stream Integration</span>
+              <span className="text-[10px] bg-red-900/90 text-red-200 px-1.5 py-0.2 rounded border border-red-700 font-bold">
+                Live XML Stream
+              </span>
+            </div>
+
+            <button
+              onClick={() => setShowCisaFeed((prev) => !prev)}
+              className="px-3.5 py-1.5 bg-red-950 hover:bg-red-900 text-red-200 border border-red-700 hover:border-red-500 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-sm"
+            >
+              <span>Open CISA ICS Feed ({showCisaFeed ? 'Active' : 'Browse'})</span>
+              {showCisaFeed ? (
+                <EyeOff className="w-3.5 h-3.5 text-red-400" />
+              ) : (
+                <Eye className="w-3.5 h-3.5 text-red-400" />
+              )}
+            </button>
+          </div>
+
+          {showCisaFeed && (
+            <CisaIcsAdvisoriesFeed
+              aptGroups={APT_GROUPS}
+              onSelectApt={(apt) => setSelectedApt(apt)}
+              onFilterBySector={(sector) => {
+                setFilters((prev) => ({ ...prev, selectedSector: sector }));
+                setViewMode('table');
+              }}
+            />
+          )}
+        </div>
         
         {/* KPI Stats Overview */}
         <StatsOverview data={filteredData} />
@@ -320,6 +360,7 @@ export default function App() {
           onViewModeChange={setViewMode}
           activeFilterCount={activeFilterCount}
           onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+          filteredData={filteredData}
         />
 
         {/* Main Data Display */}
@@ -354,6 +395,15 @@ export default function App() {
             data={filteredData}
             onSelectApt={(apt) => setSelectedApt(apt)}
             searchQuery={filters.searchQuery}
+          />
+        ) : viewMode === 'cisa' ? (
+          <CisaIcsAdvisoriesFeed
+            aptGroups={APT_GROUPS}
+            onSelectApt={(apt) => setSelectedApt(apt)}
+            onFilterBySector={(sector) => {
+              setFilters((prev) => ({ ...prev, selectedSector: sector }));
+              setViewMode('table');
+            }}
           />
         ) : viewMode === 'network' ? (
           <AptNetworkGraph

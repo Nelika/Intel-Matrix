@@ -1,7 +1,8 @@
-import React from 'react';
-import { motion } from 'motion/react';
-import { ShieldAlert, Download, FileCode, Radio, Database, Cpu, Linkedin, Terminal } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ShieldAlert, Download, FileCode, Radio, Database, Cpu, Linkedin, Terminal, Check } from 'lucide-react';
 import { AptGroup } from '../types';
+import { exportFilteredDataToCSV, exportFilteredDataToJSON } from '../utils/exportUtils';
 
 interface HeaderProps {
   totalCount: number;
@@ -17,50 +18,19 @@ export const Header: React.FC<HeaderProps> = ({
   filteredCount,
   filteredData,
   onOpenMitreModal,
-  onOpenCommandPalette,
-  onOpenShortcutsModal,
 }) => {
-  const exportCSV = () => {
-    const headers = [
-      'MITRE ATT&CK ID',
-      'APT / Classification',
-      'Major Aliases / Associated Groups',
-      'Sponsoring State Authority',
-      'Front Company / Contractor Entity',
-      'Primary Targeted Sectors',
-      'Legal and Regulatory Actions',
-    ];
+  const [exportFeedback, setExportFeedback] = useState<string | null>(null);
 
-    const rows = filteredData.map((item) => [
-      `"${item.id}"`,
-      `"${item.classification}"`,
-      `"${item.aliases.join(', ')}"`,
-      `"${item.sponsoringAuthority.replace(/"/g, '""')}"`,
-      `"${item.frontCompany.replace(/"/g, '""')}"`,
-      `"${item.rawTargetedSectors.replace(/"/g, '""')}"`,
-      `"${item.legalActions.replace(/"/g, '""')}"`,
-    ]);
-
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `china_apt_threat_matrix_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleExportCSV = () => {
+    exportFilteredDataToCSV(filteredData);
+    setExportFeedback(`Exported ${filteredData.length} records to CSV`);
+    setTimeout(() => setExportFeedback(null), 3000);
   };
 
-  const exportJSON = () => {
-    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
-      JSON.stringify(filteredData, null, 2)
-    )}`;
-    const link = document.createElement('a');
-    link.setAttribute('href', jsonString);
-    link.setAttribute('download', `china_apt_threat_matrix_${new Date().toISOString().split('T')[0]}.json`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleExportJSON = () => {
+    exportFilteredDataToJSON(filteredData);
+    setExportFeedback(`Exported ${filteredData.length} records to JSON`);
+    setTimeout(() => setExportFeedback(null), 3000);
   };
 
   return (
@@ -181,8 +151,8 @@ export const Header: React.FC<HeaderProps> = ({
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={exportCSV}
-              title="Export visible matrix data to CSV"
+              onClick={handleExportCSV}
+              title="Export currently filtered matrix dataset to CSV"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-cyan-700/60 hover:border-cyan-400 text-cyan-300 hover:text-cyan-200 text-xs font-mono font-medium transition-colors shadow-[0_0_10px_rgba(6,182,212,0.15)] cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-cyan-400" />
@@ -192,8 +162,8 @@ export const Header: React.FC<HeaderProps> = ({
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={exportJSON}
-              title="Export visible matrix data to JSON"
+              onClick={handleExportJSON}
+              title="Export currently filtered matrix dataset to JSON"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-cyan-700/60 hover:border-cyan-400 text-cyan-300 hover:text-cyan-200 text-xs font-mono font-medium transition-colors shadow-[0_0_10px_rgba(6,182,212,0.15)] cursor-pointer"
             >
               <FileCode className="w-3.5 h-3.5 text-cyan-400" />
@@ -202,6 +172,24 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
         </div>
+
+        {/* Export Notification Toast Banner */}
+        <AnimatePresence>
+          {exportFeedback && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="mt-3 py-1.5 px-3 rounded-lg bg-emerald-950/90 border border-emerald-500/80 text-emerald-300 text-xs font-mono flex items-center justify-between shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+            >
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-400 animate-bounce" />
+                <span>{exportFeedback}</span>
+              </div>
+              <span className="text-[10px] text-emerald-400/80 font-sans">Ready for offline analysis</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.header>
   );
