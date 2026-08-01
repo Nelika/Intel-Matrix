@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { AptGroup, getMitreUrl } from '../types';
-import { X, ExternalLink, ShieldAlert, Building, Globe, Scale, Copy, Check, FileText, Share2 } from 'lucide-react';
+import { X, ExternalLink, ShieldAlert, Building, Globe, Scale, Copy, Check, FileText, Share2, Terminal } from 'lucide-react';
 
 interface AptDetailModalProps {
   apt: AptGroup | null;
   onClose: () => void;
+  onOpenMitreModal?: (group: AptGroup) => void;
 }
 
-export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose }) => {
+export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose, onOpenMitreModal }) => {
   const [copiedFormat, setCopiedFormat] = useState<'json' | 'md' | null>(null);
 
   if (!apt) return null;
@@ -277,6 +278,16 @@ export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose }) 
                 </>
               )}
             </button>
+
+            {onOpenMitreModal && (
+              <button
+                onClick={() => onOpenMitreModal(apt)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-950 hover:bg-cyan-900 border border-cyan-600/80 text-cyan-300 font-bold text-xs font-mono rounded transition-colors shadow-xs cursor-pointer"
+              >
+                <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+                <span>MITRE Python / Layer</span>
+              </button>
+            )}
           </div>
 
           <button

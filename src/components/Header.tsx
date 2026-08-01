@@ -1,15 +1,16 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ShieldAlert, Download, FileCode, Radio, Database } from 'lucide-react';
+import { ShieldAlert, Download, FileCode, Radio, Database, Cpu, Linkedin, Terminal } from 'lucide-react';
 import { AptGroup } from '../types';
 
 interface HeaderProps {
   totalCount: number;
   filteredCount: number;
   filteredData: AptGroup[];
+  onOpenMitreModal?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filteredData }) => {
+export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filteredData, onOpenMitreModal }) => {
   const exportCSV = () => {
     const headers = [
       'MITRE ATT&CK ID',
@@ -35,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filte
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `apt_threat_matrix_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `china_apt_threat_matrix_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -47,7 +48,7 @@ export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filte
     )}`;
     const link = document.createElement('a');
     link.setAttribute('href', jsonString);
-    link.setAttribute('download', `apt_threat_matrix_${new Date().toISOString().split('T')[0]}.json`);
+    link.setAttribute('download', `china_apt_threat_matrix_${new Date().toISOString().split('T')[0]}.json`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -58,9 +59,35 @@ export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filte
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-30 shadow-xs"
+      className="relative border-b border-cyan-900/60 bg-slate-950 text-slate-100 shadow-2xl overflow-hidden"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      {/* Techno Animated Cyber Background Grid */}
+      <motion.div
+        animate={{ backgroundPosition: ['0px 0px', '48px 48px'] }}
+        transition={{ repeat: Infinity, duration: 12, ease: 'linear' }}
+        className="absolute inset-0 opacity-20 pointer-events-none bg-[linear-gradient(to_right,#06b6d4_1px,transparent_1px),linear-gradient(to_bottom,#06b6d4_1px,transparent_1px)] bg-[size:24px_24px]"
+      />
+
+      {/* Sweeping Cyber Laser Beam Line */}
+      <motion.div
+        animate={{ y: ['-100%', '350%'] }}
+        transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
+        className="absolute inset-x-0 h-16 bg-gradient-to-b from-transparent via-cyan-500/10 to-transparent pointer-events-none"
+      />
+
+      {/* Glowing Ambient Radial Glows */}
+      <motion.div
+        animate={{ opacity: [0.25, 0.5, 0.25], scale: [1, 1.1, 1] }}
+        transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+        className="absolute -top-12 -left-12 w-80 h-80 bg-cyan-600/20 rounded-full blur-3xl pointer-events-none"
+      />
+      <motion.div
+        animate={{ opacity: [0.2, 0.45, 0.2], scale: [1, 1.15, 1] }}
+        transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut', delay: 1 }}
+        className="absolute -bottom-12 right-12 w-96 h-96 bg-emerald-600/15 rounded-full blur-3xl pointer-events-none"
+      />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           
           {/* Title & Status */}
@@ -68,24 +95,44 @@ export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filte
             <motion.div
               whileHover={{ rotate: 5, scale: 1.05 }}
               transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-              className="p-2.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 mt-0.5 shrink-0 shadow-xs cursor-pointer"
+              className="p-3 rounded-lg bg-cyan-950/80 border border-cyan-500/40 text-cyan-400 mt-0.5 shrink-0 shadow-[0_0_15px_rgba(6,182,212,0.3)] cursor-pointer"
             >
-              <ShieldAlert className="w-6 h-6" />
+              <ShieldAlert className="w-6 h-6 animate-pulse" />
             </motion.div>
+
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-blue-700 px-2 py-0.5 rounded bg-blue-50 border border-blue-200">
-                  INTEL MATRIX
+              {/* Badges Row */}
+              <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                <span className="text-[10px] uppercase tracking-[0.2em] font-mono font-bold text-cyan-300 px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800/60 shadow-[0_0_8px_rgba(6,182,212,0.2)]">
+                  CYBER INTEL MATRIX v3.8
                 </span>
-                <span className="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono">
-                  <Radio className="w-3 h-3 text-emerald-500 animate-pulse" />
+
+                <span className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-mono px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/50">
+                  <Radio className="w-3 h-3 text-emerald-400 animate-ping" />
                   LIVE DATABASE
                 </span>
+
+                {/* Prominent "BY GOVIND NELIKA" Author Tag */}
+                <a
+                  href="https://www.linkedin.com/in/govind-nelika/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Connect on LinkedIn - Govind Nelika"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold text-amber-300 hover:text-amber-100 px-2.5 py-0.5 rounded bg-amber-950/70 hover:bg-amber-900/90 border border-amber-500/50 hover:border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.25)] hover:shadow-[0_0_18px_rgba(245,158,11,0.5)] tracking-wider transition-all cursor-pointer group"
+                >
+                  <Cpu className="w-3 h-3 text-amber-400 group-hover:scale-110 transition-transform" />
+                  <span>BY GOVIND NELIKA</span>
+                  <Linkedin className="w-3.5 h-3.5 text-amber-400 group-hover:text-amber-200 transition-colors ml-0.5" />
+                </a>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-serif font-semibold tracking-tight text-slate-900">
-                APT Threat Intelligence Matrix
+
+              {/* Main Heading */}
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-mono font-bold tracking-tight text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.2)]">
+                China APT Threat Intelligence Matrix 中华人民共和国
               </h1>
-              <p className="text-xs sm:text-sm text-slate-600 max-w-2xl font-sans mt-0.5 leading-relaxed">
+
+              {/* Description */}
+              <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-sans mt-1 leading-relaxed">
                 Comprehensive mapping of state-sponsored Advanced Persistent Threat groups, front entities, targeted sectors, and regulatory actions.
               </p>
             </div>
@@ -95,13 +142,13 @@ export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filte
           <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-end md:self-auto">
             <motion.div
               layout
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 border border-slate-200 text-xs font-mono text-slate-700"
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-900/90 border border-cyan-800/50 text-xs font-mono text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
             >
-              <Database className="w-3.5 h-3.5 text-blue-600" />
+              <Database className="w-3.5 h-3.5 text-cyan-400" />
               <motion.span
                 key={filteredCount}
-                initial={{ scale: 1.2, color: '#2563eb' }}
-                animate={{ scale: 1, color: '#334155' }}
+                initial={{ scale: 1.2, color: '#22d3ee' }}
+                animate={{ scale: 1, color: '#67e8f9' }}
                 transition={{ duration: 0.3 }}
                 className="font-semibold"
               >
@@ -109,14 +156,27 @@ export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filte
               </motion.span>
             </motion.div>
 
+            {onOpenMitreModal && (
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={onOpenMitreModal}
+                title="Open MITRE ATT&CK Python SDK & Layer Exporter"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/60 text-cyan-300 hover:text-cyan-100 text-xs font-mono font-bold transition-all shadow-[0_0_12px_rgba(6,182,212,0.25)] cursor-pointer"
+              >
+                <Terminal className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+                <span>MITRE ATT&CK SDK</span>
+              </motion.button>
+            )}
+
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={exportCSV}
               title="Export visible matrix data to CSV"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-white hover:bg-slate-50 border border-slate-200 hover:border-blue-400 text-slate-700 hover:text-blue-700 text-xs font-mono font-medium transition-colors shadow-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-cyan-700/60 hover:border-cyan-400 text-cyan-300 hover:text-cyan-200 text-xs font-mono font-medium transition-colors shadow-[0_0_10px_rgba(6,182,212,0.15)] cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 text-blue-600" />
+              <Download className="w-3.5 h-3.5 text-cyan-400" />
               <span>Export CSV</span>
             </motion.button>
 
@@ -125,9 +185,9 @@ export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filte
               whileTap={{ scale: 0.97 }}
               onClick={exportJSON}
               title="Export visible matrix data to JSON"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-white hover:bg-slate-50 border border-slate-200 hover:border-blue-400 text-slate-700 hover:text-blue-700 text-xs font-mono font-medium transition-colors shadow-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-cyan-700/60 hover:border-cyan-400 text-cyan-300 hover:text-cyan-200 text-xs font-mono font-medium transition-colors shadow-[0_0_10px_rgba(6,182,212,0.15)] cursor-pointer"
             >
-              <FileCode className="w-3.5 h-3.5 text-blue-600" />
+              <FileCode className="w-3.5 h-3.5 text-cyan-400" />
               <span>Export JSON</span>
             </motion.button>
           </div>
@@ -137,4 +197,5 @@ export const Header: React.FC<HeaderProps> = ({ totalCount, filteredCount, filte
     </motion.header>
   );
 };
+
 

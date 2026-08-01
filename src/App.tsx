@@ -10,6 +10,8 @@ import { AptCardGrid } from './components/AptCardGrid';
 import { AptTimeline } from './components/AptTimeline';
 import { AptActivityGraph } from './components/AptActivityGraph';
 import { AptDetailModal } from './components/AptDetailModal';
+import { MitreAttackModal } from './components/MitreAttackModal';
+import { MitreAttackSection } from './components/MitreAttackSection';
 import { SectorDistributionChart } from './components/SectorDistributionChart';
 import { VintageTerminalLoading } from './components/VintageTerminalLoading';
 import { ShieldCheck, BarChart2, Eye, EyeOff, Lock, ExternalLink } from 'lucide-react';
@@ -26,7 +28,9 @@ export default function App() {
   const [sortField, setSortField] = useState<SortField>('id');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [selectedApt, setSelectedApt] = useState<AptGroup | null>(null);
-  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'timeline' | 'graph'>('table');
+  const [isMitreModalOpen, setIsMitreModalOpen] = useState<boolean>(false);
+  const [mitreModalGroup, setMitreModalGroup] = useState<AptGroup | null>(null);
+  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'timeline' | 'graph' | 'mitre'>('table');
   const [showCharts, setShowCharts] = useState<boolean>(true);
 
   // Update filter helper
@@ -136,6 +140,11 @@ export default function App() {
         totalCount={APT_GROUPS.length}
         filteredCount={filteredData.length}
         filteredData={filteredData}
+        onOpenMitreModal={() => {
+          setMitreModalGroup(null);
+          setIsMitreModalOpen(true);
+          setViewMode('mitre');
+        }}
       />
 
       {/* Container */}
@@ -212,11 +221,16 @@ export default function App() {
             onSelectApt={(apt) => setSelectedApt(apt)}
             searchQuery={filters.searchQuery}
           />
-        ) : (
+        ) : viewMode === 'graph' ? (
           <AptActivityGraph
             data={filteredData}
             onSelectApt={(apt) => setSelectedApt(apt)}
             searchQuery={filters.searchQuery}
+          />
+        ) : (
+          <MitreAttackSection
+            data={filteredData}
+            onSelectApt={(apt) => setSelectedApt(apt)}
           />
         )}
 
@@ -246,22 +260,28 @@ export default function App() {
               <span>CISA Advisories</span>
               <ExternalLink className="w-3 h-3" />
             </a>
-            <a
-              href="https://www.justice.gov/"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-blue-600 flex items-center gap-1 transition-colors"
-            >
-              <span>US DOJ Cyber Releases</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
           </div>
         </footer>
 
       </main>
 
       {/* Detail Modal */}
-      <AptDetailModal apt={selectedApt} onClose={() => setSelectedApt(null)} />
+      <AptDetailModal
+        apt={selectedApt}
+        onClose={() => setSelectedApt(null)}
+        onOpenMitreModal={(group) => {
+          setMitreModalGroup(group);
+          setIsMitreModalOpen(true);
+        }}
+      />
+
+      {/* MITRE ATT&CK Python SDK & Exporter Modal */}
+      <MitreAttackModal
+        groups={filteredData}
+        selectedGroup={mitreModalGroup}
+        isOpen={isMitreModalOpen}
+        onClose={() => setIsMitreModalOpen(false)}
+      />
 
       {/* Vintage Terminal Loading Screen */}
       <AnimatePresence>

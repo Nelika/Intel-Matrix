@@ -21,10 +21,10 @@ export const VintageTerminalLoading: React.FC<VintageTerminalLoadingProps> = ({ 
     '',
     'C:\\> initiating user "govindnelika"',
     'C:\\> AUTH_TOKEN: ENCRYPTED_RSA_4096_VERIFIED',
-    'C:\\> loading APT Threat Intelligence Matrix...',
+    'C:\\> loading China APT Threat Intelligence Matrix 中华人民共和国...',
     'C:\\> [ OK ] Correlating MITRE ATT&CK Campaign Dataset [C0014]',
     'C:\\> [ OK ] Unsealing DOJ Indictments & State Sponsor Dossiers',
-    'C:\\> APT Threat Intelligence Matrix ONLINE.',
+    'C:\\> China APT Threat Intelligence Matrix 中华人民共和国 ONLINE.',
     '',
     'SYSTEM READY.'
   ];

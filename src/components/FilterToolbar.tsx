@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Filter, X, LayoutGrid, Table, RefreshCw, Clock, Activity } from 'lucide-react';
+import { Search, Filter, X, LayoutGrid, Table, RefreshCw, Clock, Activity, Terminal } from 'lucide-react';
 import { FilterState } from '../types';
 
 interface FilterToolbarProps {
@@ -9,8 +9,8 @@ interface FilterToolbarProps {
   onResetFilters: () => void;
   allSectors: string[];
   allSponsors: string[];
-  viewMode: 'table' | 'grid' | 'timeline' | 'graph';
-  onViewModeChange: (mode: 'table' | 'grid' | 'timeline' | 'graph') => void;
+  viewMode: 'table' | 'grid' | 'timeline' | 'graph' | 'mitre';
+  onViewModeChange: (mode: 'table' | 'grid' | 'timeline' | 'graph' | 'mitre') => void;
   activeFilterCount: number;
 }
 
@@ -29,6 +29,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
     { id: 'grid', label: 'Card Grid', icon: LayoutGrid },
     { id: 'timeline', label: 'Legal Timeline', icon: Clock },
     { id: 'graph', label: 'Activity Graph', icon: Activity },
+    { id: 'mitre', label: 'MITRE ATT&CK SDK', icon: Terminal },
   ] as const;
 
   return (
