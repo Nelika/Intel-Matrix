@@ -15,6 +15,7 @@ import { AptDetailModal } from './components/AptDetailModal';
 import { MitreAttackModal } from './components/MitreAttackModal';
 import { MitreAttackSection } from './components/MitreAttackSection';
 import { SectorDistributionChart } from './components/SectorDistributionChart';
+import { ThreatHeatmap } from './components/ThreatHeatmap';
 import { VintageTerminalLoading } from './components/VintageTerminalLoading';
 import { CommandPaletteModal } from './components/CommandPaletteModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
@@ -304,14 +305,23 @@ export default function App() {
 
         {/* Visual Analytics Charts */}
         {showCharts && (
-          <SectorDistributionChart
-            data={filteredData}
-            allData={APT_GROUPS}
-            onSelectSector={(sec) => handleFilterChange({ selectedSector: sec })}
-            selectedSector={filters.selectedSector}
-            onSelectSponsorOrg={(org) => handleFilterChange({ sponsoringOrgType: org })}
-            selectedSponsorOrg={filters.sponsoringOrgType}
-          />
+          <div className="space-y-6 mb-8">
+            <SectorDistributionChart
+              data={filteredData}
+              allData={APT_GROUPS}
+              onSelectSector={(sec) => handleFilterChange({ selectedSector: sec })}
+              selectedSector={filters.selectedSector}
+              onSelectSponsorOrg={(org) => handleFilterChange({ sponsoringOrgType: org })}
+              selectedSponsorOrg={filters.sponsoringOrgType}
+            />
+
+            <ThreatHeatmap
+              aptGroups={filteredData}
+              onSelectSector={(sec) => handleFilterChange({ selectedSector: sec })}
+              selectedSector={filters.selectedSector}
+              onSelectApt={(apt) => setSelectedApt(apt)}
+            />
+          </div>
         )}
 
         {/* Standalone Network Topology Map Widget */}
@@ -422,7 +432,7 @@ export default function App() {
         <footer className="mt-12 pt-6 border-t border-slate-200 text-xs text-slate-500 font-mono flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-blue-600" />
-            <span>Cyber Threat Intelligence Matrix &bull; MITRE ATT&CK Mapped</span>
+            <span>Cyber Threat Intelligence Matrix &bull; MITRE ATT&CK & CISA Feed Mapped</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-4 text-[11px]">
