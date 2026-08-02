@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Cicada3301Logo } from './Cicada3301Logo';
 import {
   ArrowLeft,
   ShieldCheck,
@@ -49,9 +48,9 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({ onBack }) => {
           </motion.button>
 
           {/* Cicada 3301 Header Branding */}
-          <div className="flex items-center gap-3">
-            <Cicada3301Logo size={36} className="text-cyan-400" />
-            <div className="hidden sm:flex flex-col">
+          <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-cyan-500/30">
+            <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
+            <div className="flex flex-col">
               <span className="font-mono text-xs font-extrabold tracking-widest text-slate-100">CICADA 3301</span>
               <span className="text-[10px] font-mono text-cyan-400/80">RESEARCH &amp; INTELLIGENCE LABS</span>
             </div>
@@ -71,21 +70,21 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({ onBack }) => {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10 space-y-12">
 
         {/* Hero Section */}
-        <div className="text-center space-y-6 max-w-4xl mx-auto pt-4">
+        <div className="text-center space-y-5 max-w-4xl mx-auto pt-4">
           
-          <div className="inline-flex items-center justify-center p-5 rounded-2xl bg-slate-900/90 border border-cyan-500/40 shadow-[0_0_40px_rgba(6,182,212,0.25)] relative group">
-            <Cicada3301Logo size={90} className="text-cyan-400 transition-transform duration-500 group-hover:scale-105" />
-          </div>
-
           <div className="space-y-3">
-            <div className="flex items-center justify-center gap-2 font-mono text-xs text-cyan-400 tracking-widest uppercase">
-              <Terminal className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center justify-center gap-2 font-mono text-xs text-cyan-300 tracking-widest uppercase bg-cyan-950/80 border border-cyan-800/80 px-3.5 py-1.5 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+              <Terminal className="w-3.5 h-3.5 text-cyan-400" />
               <span>Cicada 3301 Threat Intelligence Group</span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-mono font-extrabold tracking-tight text-slate-100 drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]">
-              About Our Organization &amp; Mission
+              Cicada 3301
             </h1>
+
+            <p className="text-base sm:text-lg font-mono text-cyan-400 font-semibold">
+              About Our Organization &amp; Research Mission
+            </p>
 
             <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.

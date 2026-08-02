@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import { AptGroup } from '../types';
 import { exportFilteredDataToCSV, exportFilteredDataToJSON } from '../utils/exportUtils';
-import { Cicada3301Logo } from './Cicada3301Logo';
 
 export type SectionId = 'cisa' | 'heatmap' | 'sector' | 'network' | 'dataset';
 
@@ -143,16 +142,15 @@ export const Header: React.FC<HeaderProps> = ({
               transition={{ type: 'spring', stiffness: 300, damping: 15 }}
               onClick={onOpenAboutPage}
               title="Cicada 3301 Threat Intelligence - Click for About Us"
-              className="p-2 sm:p-2.5 rounded-xl bg-slate-900/95 border border-cyan-500/50 text-cyan-400 mt-0.5 shrink-0 shadow-[0_0_20px_rgba(6,182,212,0.35)] cursor-pointer group flex items-center justify-center"
+              className="p-3 rounded-xl bg-slate-900/95 border border-cyan-500/50 text-cyan-400 mt-0.5 shrink-0 shadow-[0_0_20px_rgba(6,182,212,0.35)] cursor-pointer group flex items-center justify-center"
             >
-              <Cicada3301Logo size={36} className="text-cyan-400 group-hover:scale-110 transition-transform duration-300" />
+              <ShieldAlert className="w-6 h-6 text-cyan-400 group-hover:scale-110 transition-transform duration-300 animate-pulse" />
             </motion.div>
 
             <div>
               {/* Badges Row */}
               <div className="flex flex-wrap items-center gap-2 mb-1.5">
                 <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-mono font-bold text-cyan-300 px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800/60 shadow-[0_0_8px_rgba(6,182,212,0.2)]">
-                  <Cicada3301Logo size={12} className="text-cyan-400" />
                   CICADA 3301 INTEL v3.8
                 </span>
 
@@ -345,7 +343,7 @@ export const Header: React.FC<HeaderProps> = ({
                     className="group p-3.5 rounded-xl bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/50 hover:border-cyan-300 transition-all cursor-pointer shadow-md flex items-start gap-3.5"
                   >
                     <div className="p-2.5 rounded-lg bg-cyan-950 border border-cyan-700 text-cyan-300 shrink-0 group-hover:scale-110 transition-transform">
-                      <Cicada3301Logo size={20} className="text-cyan-300" />
+                      <Info className="w-5 h-5 text-cyan-300" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
