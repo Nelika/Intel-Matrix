@@ -35,10 +35,10 @@ export const AptTimeline: React.FC<AptTimelineProps> = ({
 
   // Filter & Sort Timeline Items
   const timelineEvents = useMemo(() => {
-    let filtered = data;
+    let filtered = data || [];
 
     if (selectedCategory !== 'ALL') {
-      filtered = filtered.filter((apt) => apt.legalCategory === selectedCategory);
+      filtered = filtered.filter((apt) => apt?.legalCategory === selectedCategory);
     }
 
     return [...filtered].sort((a, b) => {

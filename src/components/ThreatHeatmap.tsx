@@ -234,9 +234,9 @@ export const ThreatHeatmap: React.FC<ThreatHeatmapProps> = ({
 
     // Match APT Groups
     if (dataView === 'COMBINED' || dataView === 'APT') {
-      aptGroups.forEach((apt) => {
+      (aptGroups || []).forEach((apt) => {
         const level = getAptThreatLevel(apt);
-        apt.targetedSectors.forEach((sec) => {
+        (apt?.targetedSectors || []).forEach((sec) => {
           // Fuzzy match against primary sectors
           const matchedSector = PRIMARY_SECTORS.find(
             (p) => sec.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(sec.toLowerCase())
@@ -252,9 +252,9 @@ export const ThreatHeatmap: React.FC<ThreatHeatmapProps> = ({
 
     // Match CISA Advisories
     if (dataView === 'COMBINED' || dataView === 'CISA') {
-      cisaAdvisories.forEach((adv) => {
+      (cisaAdvisories || []).forEach((adv) => {
         const level = getCisaThreatLevel(adv);
-        adv.sectors.forEach((sec) => {
+        (adv?.sectors || []).forEach((sec) => {
           const matchedSector = PRIMARY_SECTORS.find(
             (p) => sec.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(sec.toLowerCase())
           );
@@ -262,7 +262,7 @@ export const ThreatHeatmap: React.FC<ThreatHeatmapProps> = ({
           if (matrix[targetKey] && matrix[targetKey][level]) {
             matrix[targetKey][level].cisaItems.push(adv);
             matrix[targetKey][level].count += 1;
-            adv.cves.forEach((cve) => {
+            (adv?.cves || []).forEach((cve) => {
               if (!matrix[targetKey][level].cves.includes(cve)) {
                 matrix[targetKey][level].cves.push(cve);
               }

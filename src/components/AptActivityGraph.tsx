@@ -43,18 +43,19 @@ export const AptActivityGraph: React.FC<AptActivityGraphProps> = ({
 
   // Compute stats across current filtered data
   const stats = useMemo(() => {
-    const activeCount = data.filter((d) => d.currentStatus === 'Active').length;
-    const dormantCount = data.filter((d) => d.currentStatus === 'Dormant').length;
-    const intermittentCount = data.filter((d) => d.currentStatus === 'Intermittent').length;
-    return { activeCount, dormantCount, intermittentCount, total: data.length };
+    const safeData = data || [];
+    const activeCount = safeData.filter((d) => d?.currentStatus === 'Active').length;
+    const dormantCount = safeData.filter((d) => d?.currentStatus === 'Dormant').length;
+    const intermittentCount = safeData.filter((d) => d?.currentStatus === 'Intermittent').length;
+    return { activeCount, dormantCount, intermittentCount, total: safeData.length };
   }, [data]);
 
   // Filter and sort APT groups
   const filteredApts = useMemo(() => {
-    let result = data;
+    let result = data || [];
 
     if (statusFilter !== 'ALL') {
-      result = result.filter((apt) => apt.currentStatus === statusFilter);
+      result = result.filter((apt) => apt?.currentStatus === statusFilter);
     }
 
     return [...result].sort((a, b) => {

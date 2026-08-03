@@ -8,19 +8,20 @@ interface StatsOverviewProps {
 }
 
 export const StatsOverview: React.FC<StatsOverviewProps> = ({ data }) => {
-  const total = data.length;
+  const safeData = data || [];
+  const total = safeData.length;
 
-  const mssCount = data.filter((d) => d.sponsoringOrgType === 'MSS').length;
-  const plaCount = data.filter((d) => d.sponsoringOrgType === 'PLA').length;
-  const jointCount = data.filter((d) => d.sponsoringOrgType === 'Defense / MSS' || d.sponsoringOrgType === 'Joint / Independent').length;
+  const mssCount = safeData.filter((d) => d?.sponsoringOrgType === 'MSS').length;
+  const plaCount = safeData.filter((d) => d?.sponsoringOrgType === 'PLA').length;
+  const jointCount = safeData.filter((d) => d?.sponsoringOrgType === 'Defense / MSS' || d?.sponsoringOrgType === 'Joint / Independent').length;
 
-  const indictmentCount = data.filter((d) => d.legalCategory === 'Indictment' || d.legalActions.toLowerCase().includes('indictment')).length;
-  const sanctionCount = data.filter((d) => d.legalCategory === 'Sanctions' || d.legalCategory === 'Asset Freeze' || d.legalActions.toLowerCase().includes('sanction')).length;
+  const indictmentCount = safeData.filter((d) => d?.legalCategory === 'Indictment' || d?.legalActions?.toLowerCase().includes('indictment')).length;
+  const sanctionCount = safeData.filter((d) => d?.legalCategory === 'Sanctions' || d?.legalCategory === 'Asset Freeze' || d?.legalActions?.toLowerCase().includes('sanction')).length;
 
   // Aggregate top targeted sectors
   const sectorCounts: Record<string, number> = {};
-  data.forEach((apt) => {
-    apt.targetedSectors.forEach((sec) => {
+  safeData.forEach((apt) => {
+    (apt?.targetedSectors || []).forEach((sec) => {
       sectorCounts[sec] = (sectorCounts[sec] || 0) + 1;
     });
   });

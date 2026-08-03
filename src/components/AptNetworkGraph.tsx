@@ -160,9 +160,9 @@ export const AptNetworkGraph: React.FC<AptNetworkGraphProps> = ({
 
   // Build Graph Nodes & Links from dataset
   const { nodes, links, stats } = useMemo(() => {
-    let filteredData = data;
+    let filteredData = data || [];
     if (selectedOrgType !== 'ALL') {
-      filteredData = data.filter((d) => d.sponsoringOrgType === selectedOrgType);
+      filteredData = (data || []).filter((d) => d?.sponsoringOrgType === selectedOrgType);
     }
 
     const nodeMap = new Map<string, NetworkNode>();

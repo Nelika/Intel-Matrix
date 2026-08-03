@@ -533,11 +533,11 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
         a.advisoryId.toLowerCase().includes(q) ||
         a.vendor.toLowerCase().includes(q) ||
         a.summary.toLowerCase().includes(q) ||
-        a.cves.some((c) => c.toLowerCase().includes(q));
+        a.cves?.some((c) => c.toLowerCase().includes(q));
 
       const matchesSector =
         selectedSector === "ALL" ||
-        a.sectors.some((s) => s.toLowerCase() === selectedSector.toLowerCase());
+        a.sectors?.some((s) => s.toLowerCase() === selectedSector.toLowerCase());
 
       const matchesVendor =
         selectedVendor === "ALL" || a.vendor.toLowerCase() === selectedVendor.toLowerCase();
@@ -1402,9 +1402,9 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
               const isNewlyIngested = newlyAddedIds.has(advisory.id) || newlyAddedIds.has(advisory.advisoryId);
 
               // Match APT groups targeting sectors in this advisory
-              const matchingApts = aptGroups.filter((apt) =>
-                apt.targetedSectors.some((sec) =>
-                  advisory.sectors.some((aS) => aS.toLowerCase().includes(sec.toLowerCase()) || sec.toLowerCase().includes(aS.toLowerCase()))
+              const matchingApts = (aptGroups || []).filter((apt) =>
+                (apt?.targetedSectors || []).some((sec) =>
+                  (advisory?.sectors || []).some((aS) => aS.toLowerCase().includes(sec.toLowerCase()) || sec.toLowerCase().includes(aS.toLowerCase()))
                 )
               );
 
@@ -1479,7 +1479,7 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
 
                     {/* Affected Sectors */}
                     <div className="flex flex-wrap gap-1 my-2">
-                      {advisory.sectors.map((s) => (
+                      {(advisory?.sectors || []).map((s) => (
                         <button
                           key={s}
                           onClick={() => {
@@ -1501,10 +1501,10 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
 
                   {/* CVE Tags & Links */}
                   <div className="pt-2 border-t border-slate-800/80 space-y-2">
-                    {advisory.cves.length > 0 && (
+                    {(advisory?.cves || []).length > 0 && (
                       <div className="flex flex-wrap items-center gap-1 text-[10px]">
                         <span className="text-slate-400 font-bold">CVEs:</span>
-                        {advisory.cves.map((cve) => (
+                        {(advisory?.cves || []).map((cve) => (
                           <a
                             key={cve}
                             href={`https://nvd.nist.gov/vuln/detail/${cve}`}

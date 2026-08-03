@@ -69,15 +69,15 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
   // Calculate Overlaps
   const overlappingSectors = useMemo(() => {
     if (!aptA || !aptB) return [];
-    return aptA.targetedSectors.filter((sec) =>
-      aptB.targetedSectors.some((bSec) => bSec.toLowerCase() === sec.toLowerCase())
+    return (aptA.targetedSectors || []).filter((sec) =>
+      (aptB.targetedSectors || []).some((bSec) => bSec.toLowerCase() === sec.toLowerCase())
     );
   }, [aptA, aptB]);
 
   const overlappingTechniques = useMemo(() => {
     if (!aptA || !aptB) return [];
-    return aptA.mitreTechniques.filter((tech) =>
-      aptB.mitreTechniques.some((bTech) => bTech.code === tech.code)
+    return (aptA.mitreTechniques || []).filter((tech) =>
+      (aptB.mitreTechniques || []).some((bTech) => bTech.code === tech.code)
     );
   }, [aptA, aptB]);
 

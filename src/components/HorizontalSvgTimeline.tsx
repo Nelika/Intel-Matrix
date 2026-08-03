@@ -55,10 +55,10 @@ export const HorizontalSvgTimeline: React.FC<HorizontalSvgTimelineProps> = ({
 
   // Generate timeline event points from APT groups
   const { timelineEvents, aptRows } = useMemo(() => {
-    let filteredApts = data;
+    let filteredApts = data || [];
 
     if (selectedOrgFilter !== 'ALL') {
-      filteredApts = filteredApts.filter((apt) => apt.sponsoringOrgType === selectedOrgFilter);
+      filteredApts = filteredApts.filter((apt) => apt?.sponsoringOrgType === selectedOrgFilter);
     }
 
     const events: TimelineEvent[] = [];
