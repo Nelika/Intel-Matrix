@@ -1,15 +1,16 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AptGroup, getMitreUrl } from '../types';
-import { ExternalLink, Shield, Building, Globe, Scale, ArrowRight } from 'lucide-react';
+import { ExternalLink, Shield, Building, Globe, Scale, ArrowRight, Printer } from 'lucide-react';
 
 interface AptCardGridProps {
   data: AptGroup[];
   onSelectApt: (apt: AptGroup) => void;
+  onOpenBriefingModal?: (apt: AptGroup) => void;
   searchQuery: string;
 }
 
-export const AptCardGrid: React.FC<AptCardGridProps> = ({ data, onSelectApt, searchQuery }) => {
+export const AptCardGrid: React.FC<AptCardGridProps> = ({ data, onSelectApt, onOpenBriefingModal, searchQuery }) => {
   const highlightMatch = (text: string) => {
     if (!searchQuery.trim()) return text;
     const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
@@ -174,13 +175,28 @@ export const AptCardGrid: React.FC<AptCardGridProps> = ({ data, onSelectApt, sea
 
               {/* Footer / Legal Summary */}
               <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5 text-slate-600 font-mono text-[11px]">
+                <div className="flex items-center gap-1.5 text-slate-600 font-mono text-[11px] truncate max-w-[180px]">
                   <Scale className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                  <span className="truncate max-w-[200px]">{apt.legalActions}</span>
+                  <span className="truncate">{apt.legalActions}</span>
                 </div>
-                <span className="text-blue-600 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1 font-mono text-[11px] font-bold">
-                  View <ArrowRight className="w-3 h-3" />
-                </span>
+                <div className="flex items-center gap-2">
+                  {onOpenBriefingModal && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenBriefingModal(apt);
+                      }}
+                      title="Generate Briefing PDF"
+                      className="p-1 px-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-mono text-[10px] font-bold rounded flex items-center gap-1 transition-colors"
+                    >
+                      <Printer className="w-3 h-3" />
+                      <span>PDF</span>
+                    </button>
+                  )}
+                  <span className="text-blue-600 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1 font-mono text-[11px] font-bold">
+                    View <ArrowRight className="w-3 h-3" />
+                  </span>
+                </div>
               </div>
             </motion.div>
           );

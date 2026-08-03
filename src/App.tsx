@@ -12,6 +12,7 @@ import { AptActivityGraph } from './components/AptActivityGraph';
 import { AptNetworkGraph } from './components/AptNetworkGraph';
 import { AptComparisonView } from './components/AptComparisonView';
 import { AptDetailModal } from './components/AptDetailModal';
+import { AptBriefingModal } from './components/AptBriefingModal';
 import { MitreAttackModal } from './components/MitreAttackModal';
 import { MitreAttackSection } from './components/MitreAttackSection';
 import { SectorDistributionChart } from './components/SectorDistributionChart';
@@ -38,6 +39,15 @@ export default function App() {
   const [selectedApt, setSelectedApt] = useState<AptGroup | null>(null);
   const [isMitreModalOpen, setIsMitreModalOpen] = useState<boolean>(false);
   const [mitreModalGroup, setMitreModalGroup] = useState<AptGroup | null>(null);
+
+  // Briefing Modal state
+  const [isBriefingModalOpen, setIsBriefingModalOpen] = useState<boolean>(false);
+  const [briefingModalGroup, setBriefingModalGroup] = useState<AptGroup | null>(null);
+
+  const handleOpenBriefing = (group?: AptGroup) => {
+    setBriefingModalGroup(group || selectedApt || APT_GROUPS[0]);
+    setIsBriefingModalOpen(true);
+  };
   const [viewMode, setViewMode] = useState<'table' | 'grid' | 'timeline' | 'graph' | 'network' | 'mitre' | 'compare' | 'cisa'>('table');
   const [showCharts, setShowCharts] = useState<boolean>(true);
   const [showNetworkWidget, setShowNetworkWidget] = useState<boolean>(true);
@@ -265,6 +275,7 @@ export default function App() {
           setIsMitreModalOpen(true);
           setViewMode('mitre');
         }}
+        onOpenBriefingModal={() => handleOpenBriefing()}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         onOpenShortcutsModal={() => setIsShortcutsModalOpen(true)}
         onOpenAboutPage={() => setActivePage('about')}
@@ -471,12 +482,14 @@ export default function App() {
             sortOrder={sortOrder}
             onSort={handleSort}
             onSelectApt={(apt) => setSelectedApt(apt)}
+            onOpenBriefingModal={handleOpenBriefing}
             searchQuery={filters.searchQuery}
           />
         ) : viewMode === 'grid' ? (
           <AptCardGrid
             data={filteredData}
             onSelectApt={(apt) => setSelectedApt(apt)}
+            onOpenBriefingModal={handleOpenBriefing}
             searchQuery={filters.searchQuery}
           />
         ) : viewMode === 'compare' ? (
@@ -557,7 +570,21 @@ export default function App() {
           setMitreModalGroup(group);
           setIsMitreModalOpen(true);
         }}
+        onOpenBriefingModal={(group) => {
+          setSelectedApt(null);
+          handleOpenBriefing(group);
+        }}
       />
+
+      {/* Threat Intelligence Executive Briefing Generator Modal */}
+      {isBriefingModalOpen && (
+        <AptBriefingModal
+          apt={briefingModalGroup}
+          allApts={APT_GROUPS}
+          onClose={() => setIsBriefingModalOpen(false)}
+          onSelectApt={(group) => setBriefingModalGroup(group)}
+        />
+      )}
 
       {/* MITRE ATT&CK Python SDK & Exporter Modal */}
       <MitreAttackModal

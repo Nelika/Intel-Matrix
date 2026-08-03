@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { AptGroup, getMitreUrl } from '../types';
-import { X, ExternalLink, ShieldAlert, Building, Globe, Scale, Copy, Check, FileText, Share2, Terminal } from 'lucide-react';
+import { X, ExternalLink, ShieldAlert, Building, Globe, Scale, Copy, Check, FileText, Share2, Terminal, Printer } from 'lucide-react';
 
 interface AptDetailModalProps {
   apt: AptGroup | null;
   onClose: () => void;
   onOpenMitreModal?: (group: AptGroup) => void;
+  onOpenBriefingModal?: (group: AptGroup) => void;
 }
 
-export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose, onOpenMitreModal }) => {
+export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose, onOpenMitreModal, onOpenBriefingModal }) => {
   const [copiedFormat, setCopiedFormat] = useState<'json' | 'md' | null>(null);
 
   if (!apt) return null;
@@ -54,13 +55,25 @@ export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose, on
 
         {/* Title Area */}
         <div className="mb-6 pt-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-[10px] font-mono px-2.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 font-bold uppercase tracking-[0.18em] rounded">
-              THREAT DOSSIER
-            </span>
-            <span className="text-xs font-mono text-slate-500 font-semibold">
-              [ATT&CK ID: {apt.id}]
-            </span>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono px-2.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 font-bold uppercase tracking-[0.18em] rounded">
+                THREAT DOSSIER
+              </span>
+              <span className="text-xs font-mono text-slate-500 font-semibold">
+                [ATT&CK ID: {apt.id}]
+              </span>
+            </div>
+
+            {onOpenBriefingModal && (
+              <button
+                onClick={() => onOpenBriefingModal(apt)}
+                className="flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-mono font-bold text-xs rounded shadow-sm transition-all cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Generate Briefing (PDF)</span>
+              </button>
+            )}
           </div>
 
           <div className="flex flex-wrap items-baseline gap-3">
@@ -278,6 +291,16 @@ export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose, on
                 </>
               )}
             </button>
+
+            {onOpenBriefingModal && (
+              <button
+                onClick={() => onOpenBriefingModal(apt)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs font-mono rounded transition-colors shadow-xs cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Executive Briefing (PDF)</span>
+              </button>
+            )}
 
             {onOpenMitreModal && (
               <button

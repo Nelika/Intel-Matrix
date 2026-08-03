@@ -20,7 +20,8 @@ import {
   Layers,
   Sparkles,
   Compass,
-  Info
+  Info,
+  Printer
 } from 'lucide-react';
 import { AptGroup } from '../types';
 import { exportFilteredDataToCSV, exportFilteredDataToJSON } from '../utils/exportUtils';
@@ -32,6 +33,7 @@ interface HeaderProps {
   filteredCount: number;
   filteredData: AptGroup[];
   onOpenMitreModal?: () => void;
+  onOpenBriefingModal?: () => void;
   onOpenCommandPalette?: () => void;
   onOpenShortcutsModal?: () => void;
   onOpenAboutPage?: () => void;
@@ -49,6 +51,7 @@ export const Header: React.FC<HeaderProps> = ({
   filteredCount,
   filteredData,
   onOpenMitreModal,
+  onOpenBriefingModal,
   onOpenAboutPage,
   onNavigateToSection,
   sectionStatus,
@@ -176,7 +179,6 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Main Heading */}
               <h1 className="text-xl sm:text-2xl md:text-3xl font-mono font-bold tracking-tight text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.2)] flex items-center gap-2 flex-wrap">
                 <span>China APT Threat Intelligence Matrix</span>
-                <span className="text-xs sm:text-sm text-cyan-400 font-mono font-normal opacity-80">(Cicada 3301)</span>
                 <span className="text-slate-400 text-lg">中华人民共和国</span>
               </h1>
 
@@ -231,6 +233,19 @@ export const Header: React.FC<HeaderProps> = ({
                 {filteredCount} / {totalCount} Records
               </motion.span>
             </motion.div>
+
+            {onOpenBriefingModal && (
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={onOpenBriefingModal}
+                title="Generate Formatted Briefing PDF"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/60 text-emerald-300 hover:text-emerald-100 text-xs font-mono font-bold transition-all shadow-[0_0_12px_rgba(16,185,129,0.25)] cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">Briefing PDF</span>
+              </motion.button>
+            )}
 
             {onOpenMitreModal && (
               <motion.button

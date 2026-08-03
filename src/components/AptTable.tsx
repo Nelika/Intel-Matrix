@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AptGroup, SortField, SortOrder, getMitreUrl } from '../types';
-import { ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Shield, Copy, Check, Info } from 'lucide-react';
+import { ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Shield, Copy, Check, Info, Printer } from 'lucide-react';
 
 interface AptTableProps {
   data: AptGroup[];
@@ -9,6 +9,7 @@ interface AptTableProps {
   sortOrder: SortOrder;
   onSort: (field: SortField) => void;
   onSelectApt: (apt: AptGroup) => void;
+  onOpenBriefingModal?: (apt: AptGroup) => void;
   searchQuery: string;
 }
 
@@ -18,6 +19,7 @@ export const AptTable: React.FC<AptTableProps> = ({
   sortOrder,
   onSort,
   onSelectApt,
+  onOpenBriefingModal,
   searchQuery,
 }) => {
   const renderSortIcon = (field: SortField) => {
@@ -319,18 +321,34 @@ export const AptTable: React.FC<AptTableProps> = ({
 
                     {/* Action */}
                     <td className="py-3.5 px-3 text-center">
-                      <motion.button
-                        whileHover={{ scale: 1.15 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelectApt(apt);
-                        }}
-                        title="Inspect full intel dossier"
-                        className="p-1.5 bg-slate-100 border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 rounded transition-all cursor-pointer"
-                      >
-                        <Info className="w-4 h-4" />
-                      </motion.button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        {onOpenBriefingModal && (
+                          <motion.button
+                            whileHover={{ scale: 1.15 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenBriefingModal(apt);
+                            }}
+                            title="Generate Briefing PDF"
+                            className="p-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 rounded transition-all cursor-pointer"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </motion.button>
+                        )}
+                        <motion.button
+                          whileHover={{ scale: 1.15 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectApt(apt);
+                          }}
+                          title="Inspect full intel dossier"
+                          className="p-1.5 bg-slate-100 border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 rounded transition-all cursor-pointer"
+                        >
+                          <Info className="w-4 h-4" />
+                        </motion.button>
+                      </div>
                     </td>
 
                   </motion.tr>
