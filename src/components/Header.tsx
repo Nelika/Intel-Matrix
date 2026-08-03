@@ -65,14 +65,23 @@ export const Header: React.FC<HeaderProps> = ({
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [isManualCollapsed, setIsManualCollapsed] = useState<boolean | null>(null);
 
-  // Scroll listener to auto-shrink header on scroll down
+  // Hysteresis scroll listener to prevent jitter/flicker at scroll threshold
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      if (window.scrollY > 60) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-        setIsManualCollapsed(null);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentY = window.scrollY;
+          // Use 90px trigger down, 20px trigger up to create a 70px hysteresis deadzone
+          if (currentY > 90) {
+            setIsScrolled(true);
+          } else if (currentY < 20) {
+            setIsScrolled(false);
+            setIsManualCollapsed(null);
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -157,149 +166,178 @@ export const Header: React.FC<HeaderProps> = ({
         />
       </div>
 
-      <div className={`relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-300 ${isCompact ? 'py-2' : 'py-4 sm:py-5'}`}>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-3 transition-all duration-300">
         <div className="flex items-center justify-between gap-3">
           
-          {/* Title & Status */}
-          <div className="flex items-center gap-3">
-            {!isCompact && (
-              <motion.div
-                whileHover={{ rotate: 3, scale: 1.05 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-                onClick={onOpenAboutPage}
-                title="Cicada 3301 Threat Intelligence - Click for About Us"
-                className="rounded-xl bg-slate-900/95 border border-cyan-500/50 text-cyan-400 shrink-0 shadow-[0_0_20px_rgba(6,182,212,0.35)] cursor-pointer group flex items-center justify-center p-3 mt-0.5"
-              >
-                <ShieldAlert className="w-6 h-6 text-cyan-400 group-hover:scale-110 transition-transform duration-300 animate-pulse" />
-              </motion.div>
-            )}
+          {/* Title & Status Block */}
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <motion.div
+              whileHover={{ rotate: 3, scale: 1.05 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+              onClick={onOpenAboutPage}
+              title="Cicada 3301 Threat Intelligence - Click for About Us"
+              className={`rounded-xl bg-slate-900/95 border border-cyan-500/50 text-cyan-400 shrink-0 shadow-[0_0_20px_rgba(6,182,212,0.35)] cursor-pointer group flex items-center justify-center transition-all duration-300 ${
+                isCompact ? 'p-1.5' : 'p-2.5 mt-0.5'
+              }`}
+            >
+              <ShieldAlert className={`text-cyan-400 group-hover:scale-110 transition-all duration-300 animate-pulse ${
+                isCompact ? 'w-4 h-4' : 'w-6 h-6'
+              }`} />
+            </motion.div>
 
-            <div>
-              {/* Badges Row (Hidden when compact) */}
-              {!isCompact && (
-                <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                  <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-mono font-bold text-cyan-300 px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800/60 shadow-[0_0_8px_rgba(6,182,212,0.2)]">
-                    CICADA 3301 INTEL v3.8
-                  </span>
-
-                  <span className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-mono px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/50">
-                    <Radio className="w-3 h-3 text-emerald-400 animate-ping" />
-                    LIVE DATABASE
-                  </span>
-
-                  {/* Prominent "BY GOVIND NELIKA" Author Tag */}
-                  <a
-                    href="https://www.linkedin.com/in/govind-nelika/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Connect on LinkedIn - Govind Nelika"
-                    className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold text-amber-300 hover:text-amber-100 px-2.5 py-0.5 rounded bg-amber-950/70 hover:bg-amber-900/90 border border-amber-500/50 hover:border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.25)] hover:shadow-[0_0_18px_rgba(245,158,11,0.5)] tracking-wider transition-all cursor-pointer group"
+            <div className="min-w-0 flex-1">
+              {/* Badges Row (Smoothly collapsible) */}
+              <AnimatePresence initial={false}>
+                {!isCompact && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0, marginBottom: 0 }}
+                    animate={{ height: 'auto', opacity: 1, marginBottom: 6 }}
+                    exit={{ height: 0, opacity: 0, marginBottom: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                    className="overflow-hidden flex flex-wrap items-center gap-2"
                   >
-                    <Cpu className="w-3 h-3 text-amber-400 group-hover:scale-110 transition-transform" />
-                    <span>BY GOVIND NELIKA</span>
-                    <Linkedin className="w-3.5 h-3.5 text-amber-400 group-hover:text-amber-200 transition-colors ml-0.5" />
-                  </a>
-                </div>
-              )}
+                    <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-mono font-bold text-cyan-300 px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800/60 shadow-[0_0_8px_rgba(6,182,212,0.2)]">
+                      CICADA 3301 INTEL v3.8
+                    </span>
+
+                    <span className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-mono px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/50">
+                      <Radio className="w-3 h-3 text-emerald-400 animate-ping" />
+                      LIVE DATABASE
+                    </span>
+
+                    {/* Prominent "BY GOVIND NELIKA" Author Tag */}
+                    <a
+                      href="https://www.linkedin.com/in/govind-nelika/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Connect on LinkedIn - Govind Nelika"
+                      className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold text-amber-300 hover:text-amber-100 px-2.5 py-0.5 rounded bg-amber-950/70 hover:bg-amber-900/90 border border-amber-500/50 hover:border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.25)] hover:shadow-[0_0_18px_rgba(245,158,11,0.5)] tracking-wider transition-all cursor-pointer group"
+                    >
+                      <Cpu className="w-3 h-3 text-amber-400 group-hover:scale-110 transition-transform" />
+                      <span>BY GOVIND NELIKA</span>
+                      <Linkedin className="w-3.5 h-3.5 text-amber-400 group-hover:text-amber-200 transition-colors ml-0.5" />
+                    </a>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Main Heading */}
-              <h1 className={`font-mono font-bold tracking-tight text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.2)] flex items-center gap-2 flex-wrap transition-all duration-300 ${isCompact ? 'text-xs sm:text-sm' : 'text-xl sm:text-2xl md:text-3xl'}`}>
-                <span>China APT Threat Intelligence Matrix</span>
-                <span className={`text-slate-400 ${isCompact ? 'text-xs' : 'text-lg'}`}>中华人民共和国</span>
+              <h1 className={`font-mono font-bold tracking-tight text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.2)] flex items-center gap-2 flex-wrap transition-all duration-300 ${
+                isCompact ? 'text-xs sm:text-sm leading-tight' : 'text-lg sm:text-xl md:text-2xl'
+              }`}>
+                <span className="truncate">China APT Threat Intelligence Matrix</span>
+                <span className={`text-slate-400 transition-all duration-300 ${isCompact ? 'text-[10px] hidden sm:inline' : 'text-sm'}`}>
+                  中华人民共和国
+                </span>
               </h1>
 
-              {/* Description (Hidden when compact) */}
-              {!isCompact && (
-                <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-sans mt-1 leading-relaxed animate-fade-in">
-                  Comprehensive mapping of state-sponsored Advanced Persistent Threat groups, front entities, targeted sectors, regulatory actions, and real-time CISA ICS advisory intelligence.
-                </p>
-              )}
+              {/* Description (Smoothly collapsible) */}
+              <AnimatePresence initial={false}>
+                {!isCompact && (
+                  <motion.p
+                    initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                    animate={{ height: 'auto', opacity: 1, marginTop: 4 }}
+                    exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                    className="overflow-hidden text-xs text-slate-300 max-w-2xl font-sans leading-relaxed"
+                  >
+                    Comprehensive mapping of state-sponsored Advanced Persistent Threat groups, front entities, targeted sectors, regulatory actions, and real-time CISA ICS advisory intelligence.
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
           {/* Action Bar */}
-          <div className="flex items-center gap-2 shrink-0">
-            {!isCompact && (
-              <>
-                {/* About Us Button */}
-                {onOpenAboutPage && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={onOpenAboutPage}
-                    title="Open About Us & Organization Information Page"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-cyan-950/80 hover:bg-cyan-900/90 border border-cyan-500/60 hover:border-cyan-300 text-cyan-200 hover:text-white text-xs font-mono font-bold transition-all shadow-[0_0_14px_rgba(6,182,212,0.25)] cursor-pointer group"
-                  >
-                    <Info className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
-                    <span>About Us</span>
-                  </motion.button>
-                )}
-
-                {/* Techno Slide Menu Trigger Button */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setIsMenuOpen(true)}
-                  title="Open Cyber Threat Intelligence Slide Navigation Menu"
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 hover:from-cyan-900 hover:to-indigo-900 border border-cyan-400/80 hover:border-cyan-300 text-cyan-200 hover:text-white text-xs font-mono font-bold transition-all shadow-[0_0_18px_rgba(6,182,212,0.35)] cursor-pointer group"
-                >
-                  <Menu className="w-4 h-4 text-cyan-300 group-hover:rotate-90 transition-transform duration-300" />
-                  <span>Menu</span>
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                </motion.button>
-
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Secondary Buttons (Visible in Expanded Mode) */}
+            <AnimatePresence initial={false}>
+              {!isCompact && (
                 <motion.div
-                  layout
-                  className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-900/90 border border-cyan-800/50 text-xs font-mono text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="hidden md:flex items-center gap-2"
                 >
-                  <Database className="w-3.5 h-3.5 text-cyan-400" />
-                  <motion.span
-                    key={filteredCount}
-                    initial={{ scale: 1.2, color: '#22d3ee' }}
-                    animate={{ scale: 1, color: '#67e8f9' }}
-                    transition={{ duration: 0.3 }}
-                    className="font-semibold"
-                  >
-                    {filteredCount} / {totalCount} Records
-                  </motion.span>
+                  {onOpenBriefingModal && (
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={onOpenBriefingModal}
+                      title="Generate Formatted Briefing PDF"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/60 text-emerald-300 hover:text-emerald-100 text-xs font-mono font-bold transition-all shadow-[0_0_12px_rgba(16,185,129,0.25)] cursor-pointer"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Briefing PDF</span>
+                    </motion.button>
+                  )}
+
+                  {onOpenMitreModal && (
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={onOpenMitreModal}
+                      title="Open MITRE ATT&CK Python SDK & Layer Exporter"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/60 text-cyan-300 hover:text-cyan-100 text-xs font-mono font-bold transition-all shadow-[0_0_12px_rgba(6,182,212,0.25)] cursor-pointer"
+                    >
+                      <Terminal className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+                      <span>MITRE SDK</span>
+                    </motion.button>
+                  )}
                 </motion.div>
+              )}
+            </AnimatePresence>
 
-                {onOpenBriefingModal && (
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={onOpenBriefingModal}
-                    title="Generate Formatted Briefing PDF"
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/60 text-emerald-300 hover:text-emerald-100 text-xs font-mono font-bold transition-all shadow-[0_0_12px_rgba(16,185,129,0.25)] cursor-pointer"
-                  >
-                    <Printer className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="hidden sm:inline">Briefing PDF</span>
-                  </motion.button>
-                )}
+            {/* Database / Records Badge (Always visible on desktop) */}
+            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-md bg-slate-900/90 border border-cyan-800/50 text-xs font-mono text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.1)]">
+              <Database className="w-3.5 h-3.5 text-cyan-400" />
+              <motion.span
+                key={filteredCount}
+                initial={{ scale: 1.2, color: '#22d3ee' }}
+                animate={{ scale: 1, color: '#67e8f9' }}
+                transition={{ duration: 0.3 }}
+                className="font-semibold"
+              >
+                {filteredCount} / {totalCount}
+              </motion.span>
+            </div>
 
-                {onOpenMitreModal && (
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={onOpenMitreModal}
-                    title="Open MITRE ATT&CK Python SDK & Layer Exporter"
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/60 text-cyan-300 hover:text-cyan-100 text-xs font-mono font-bold transition-all shadow-[0_0_12px_rgba(6,182,212,0.25)] cursor-pointer"
-                  >
-                    <Terminal className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-                    <span className="hidden sm:inline">MITRE SDK</span>
-                  </motion.button>
-                )}
-              </>
+            {/* About Us Button (Always accessible) */}
+            {onOpenAboutPage && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onOpenAboutPage}
+                title="Open About Us & Organization Information Page"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-cyan-950/80 hover:bg-cyan-900/90 border border-cyan-500/60 hover:border-cyan-300 text-cyan-200 hover:text-white text-xs font-mono font-bold transition-all shadow-[0_0_14px_rgba(6,182,212,0.25)] cursor-pointer group"
+              >
+                <Info className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+                <span className="hidden sm:inline">About</span>
+              </motion.button>
             )}
 
-            {/* Interactive Header Expand/Collapse Toggle Button (Always at far right) */}
+            {/* Techno Slide Menu Trigger Button (Always accessible) */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsMenuOpen(true)}
+              title="Open Cyber Threat Intelligence Slide Navigation Menu"
+              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-md bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 hover:from-cyan-900 hover:to-indigo-900 border border-cyan-400/80 hover:border-cyan-300 text-cyan-200 hover:text-white text-xs font-mono font-bold transition-all shadow-[0_0_18px_rgba(6,182,212,0.35)] cursor-pointer group"
+            >
+              <Menu className="w-4 h-4 text-cyan-300 group-hover:rotate-90 transition-transform duration-300" />
+              <span>Menu</span>
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+            </motion.button>
+
+            {/* Interactive Header Expand/Collapse Toggle Button */}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setIsManualCollapsed(isCompact ? false : true)}
               title={isCompact ? "Expand Header" : "Collapse Header"}
               aria-label={isCompact ? "Expand Header" : "Collapse Header"}
-              className={`p-2 rounded-lg transition-all cursor-pointer flex items-center justify-center group ${
+              className={`p-1.5 sm:p-2 rounded-lg transition-all cursor-pointer flex items-center justify-center group ${
                 isCompact
                   ? 'bg-gradient-to-r from-cyan-950 to-blue-950 hover:from-cyan-900 hover:to-blue-900 border border-cyan-400/80 hover:border-cyan-300 text-cyan-200 hover:text-white shadow-[0_0_14px_rgba(6,182,212,0.35)]'
                   : 'bg-slate-900/90 hover:bg-slate-800 border border-cyan-800/60 hover:border-cyan-500/80 text-cyan-300 hover:text-white shadow-[0_0_10px_rgba(6,182,212,0.15)]'
