@@ -207,6 +207,166 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
   const [downloadToolbarOpen, setDownloadToolbarOpen] = useState<boolean>(false);
   const [hoveredTrendDayIndex, setHoveredTrendDayIndex] = useState<number | null>(null);
 
+  // Client-side direct CSAF stream fallback for static hosts (e.g. GitHub Pages)
+  const fetchCisaCsafDirectFromGitHubClient = async (): Promise<CisaAdvisory[]> => {
+    try {
+      const response = await fetch("https://api.github.com/repos/cisagov/CSAF/contents/csaf_files/OT/white/2026", {
+        headers: {
+          "Accept": "application/vnd.github.v3+json"
+        }
+      });
+
+      if (!response.ok) {
+        console.warn(`[GitHub CSAF Direct Client] API returned HTTP ${response.status}`);
+        return [];
+      }
+
+      const files: Array<{ name: string; download_url: string; type: string }> = await response.json();
+      if (!Array.isArray(files)) return [];
+
+      const jsonFiles = files
+        .filter((f) => f.name.endsWith(".json") && !f.name.endsWith(".asc") && !f.name.endsWith(".sha512"))
+        .reverse();
+
+      if (jsonFiles.length === 0) return [];
+
+      // Slice top 25 CSAF advisories
+      const selectedFiles = jsonFiles.slice(0, 25);
+
+      const parsedResults = await Promise.all(
+        selectedFiles.map(async (file) => {
+          try {
+            const res = await fetch(file.download_url);
+            if (!res.ok) return null;
+            const csaf = await res.json();
+            const doc = csaf.document || {};
+
+            const advisoryId = (doc.tracking?.id || file.name.replace(".json", "")).toUpperCase();
+            const title = doc.title || advisoryId;
+            const pubDateRaw = doc.tracking?.initial_release_date || doc.tracking?.current_release_date || new Date().toISOString();
+
+            const notes: Array<{ category: string; text: string; title?: string }> = doc.notes || [];
+            const summaryNote = notes.find((n) => n.category === "summary") || notes.find((n) => n.category === "description") || notes[0];
+            const rawSummary = summaryNote ? summaryNote.text : title;
+
+            const cleanHtmlEntities = (str: string) =>
+              str
+                .replace(/&nbsp;/g, " ")
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&quot;/g, '"')
+                .replace(/&#039;/g, "'")
+                .replace(/&amp;/g, "&")
+                .replace(/<[^>]*>/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+
+            const summary = cleanHtmlEntities(rawSummary);
+
+            const sectorNote = notes.find((n) => n.title?.toLowerCase().includes("sector") || n.category === "other");
+            const sectorText = sectorNote ? sectorNote.text : title + " " + summary;
+
+            const cves: string[] = [];
+            if (Array.isArray(csaf.vulnerabilities)) {
+              csaf.vulnerabilities.forEach((v: any) => {
+                if (v.cve) cves.push(v.cve.toUpperCase());
+              });
+            }
+            if (cves.length === 0) {
+              const matches = (title + " " + summary).match(/CVE-\d{4}-\d+/gi);
+              if (matches) {
+                matches.forEach((c) => cves.push(c.toUpperCase()));
+              }
+            }
+            const uniqueCves = Array.from(new Set(cves));
+
+            const extractVendor = (t: string) => {
+              const cleaned = t.replace(/^CISA\s+Adds\s+/i, "").replace(/^ICS\s+Advisory\s+/i, "").trim();
+              const parts = cleaned.split(" ");
+              if (parts.length > 1) {
+                return `${parts[0]} ${parts[1]}`.replace(/[/,:-]/g, "").trim();
+              }
+              return parts[0] || "ICS Vendor";
+            };
+
+            const deriveSectorsAndApts = (titleAndSummary: string) => {
+              const text = titleAndSummary.toLowerCase();
+              const sectorsSet = new Set<string>();
+              const aptsSet = new Set<string>();
+
+              if (text.includes("electric") || text.includes("power") || text.includes("grid") || text.includes("energy")) {
+                sectorsSet.add("Energy");
+                aptsSet.add("APT41");
+                aptsSet.add("VOLT_TYPHOON");
+              }
+              if (text.includes("water") || text.includes("wastewater") || text.includes("pump")) {
+                sectorsSet.add("Water and Wastewater Systems");
+                aptsSet.add("VOLT_TYPHOON");
+                aptsSet.add("APT27");
+              }
+              if (text.includes("manufactur") || text.includes("automation") || text.includes("plc") || text.includes("igss") || text.includes("control") || text.includes("siemens") || text.includes("schneider") || text.includes("rockwell")) {
+                sectorsSet.add("Critical Manufacturing");
+                aptsSet.add("APT41");
+                aptsSet.add("APT10");
+                aptsSet.add("APT1");
+              }
+              if (text.includes("telecom") || text.includes("router") || text.includes("network") || text.includes("mikrotik") || text.includes("arista")) {
+                sectorsSet.add("Telecommunications");
+                sectorsSet.add("Information Technology");
+                aptsSet.add("VOLT_TYPHOON");
+                aptsSet.add("APT30");
+              }
+              if (text.includes("building") || text.includes("facility") || text.includes("johnson")) {
+                sectorsSet.add("Commercial Facilities");
+                sectorsSet.add("Government Facilities");
+                aptsSet.add("APT31");
+              }
+
+              if (sectorsSet.size === 0) {
+                sectorsSet.add("Critical Infrastructure");
+                aptsSet.add("APT41");
+                aptsSet.add("VOLT_TYPHOON");
+              }
+
+              return {
+                sectors: Array.from(sectorsSet),
+                relatedAptIds: Array.from(aptsSet)
+              };
+            };
+
+            const vendor = extractVendor(title);
+            const { sectors, relatedAptIds } = deriveSectorsAndApts(title + " " + summary + " " + sectorText);
+
+            const parsedDate = new Date(pubDateRaw);
+            const isDateValid = !isNaN(parsedDate.getTime());
+            const pubDateIso = isDateValid ? parsedDate.toISOString() : new Date().toISOString();
+
+            return {
+              id: advisoryId.toLowerCase(),
+              advisoryId,
+              title,
+              link: `https://www.cisa.gov/news-events/ics-advisories/${advisoryId.toLowerCase()}`,
+              pubDate: pubDateIso,
+              vendor,
+              summary: summary.slice(0, 350) + (summary.length > 350 ? "..." : ""),
+              csafUrl: `https://github.com/cisagov/CSAF/blob/develop/csaf_files/OT/white/2026/${file.name}`,
+              cves: uniqueCves,
+              sectors,
+              relatedAptIds
+            };
+          } catch (err) {
+            return null;
+          }
+        })
+      );
+
+      return parsedResults.filter((item) => item !== null) as CisaAdvisory[];
+    } catch (err) {
+      console.warn("Direct CSAF GitHub client fetch failed:", err);
+      return [];
+    }
+  };
+
   // Fetch CISA Advisories from backend API & compile with baseline + stored dataset
   const fetchAdvisories = async (options?: { isBackground?: boolean }) => {
     const isBg = options?.isBackground ?? false;
@@ -217,90 +377,97 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
     }
     setError(null);
 
+    let incoming: CisaAdvisory[] = [];
+    let retrievedAtTimestamp = new Date().toISOString();
+
     try {
       const res = await fetch("/api/cisa-advisories");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      const incoming: CisaAdvisory[] = json.advisories || [];
+      incoming = json.advisories || [];
+      if (json.retrievedAt) retrievedAtTimestamp = json.retrievedAt;
+    } catch (err: any) {
+      console.info("Server API endpoint unreachable (e.g. GitHub Pages static host), falling back to client-side direct CSAF stream from GitHub...", err);
+      try {
+        incoming = await fetchCisaCsafDirectFromGitHubClient();
+      } catch (clientErr) {
+        console.warn("Client-side CSAF stream error:", clientErr);
+      }
+    }
 
-      setAdvisories((prev) => {
-        const map = new Map<string, CisaAdvisory>();
+    setAdvisories((prev) => {
+      const map = new Map<string, CisaAdvisory>();
 
-        // 1. Add historical baseline
-        HISTORICAL_CISA_ADVISORIES.forEach((item) => {
-          const key = (item.advisoryId || item.id || item.link).toLowerCase();
-          if (key) map.set(key, item);
-        });
-
-        // 2. Add items from localStorage
-        try {
-          const saved = localStorage.getItem("cisa_ics_accumulated_advisories_v2");
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed)) {
-              parsed.forEach((item: CisaAdvisory) => {
-                const key = (item.advisoryId || item.id || item.link).toLowerCase();
-                if (key) map.set(key, item);
-              });
-            }
-          }
-        } catch (e) {}
-
-        // 3. Add existing state items
-        prev.forEach((item) => {
-          const key = (item.advisoryId || item.id || item.link).toLowerCase();
-          if (key) map.set(key, item);
-        });
-
-        // 4. Append new incoming entries from live XML stream
-        let added = 0;
-        const freshKeys = new Set<string>();
-        incoming.forEach((item) => {
-          const key = (item.advisoryId || item.id || item.link).toLowerCase();
-          if (key) {
-            if (!map.has(key)) {
-              added++;
-              freshKeys.add(key);
-              if (item.id) freshKeys.add(item.id.toLowerCase());
-              if (item.advisoryId) freshKeys.add(item.advisoryId.toLowerCase());
-            }
-            map.set(key, item);
-          }
-        });
-
-        const compiled = Array.from(map.values());
-        
-        // Sort chronologically newest first
-        compiled.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
-
-        setNewAddedCount(added);
-        if (freshKeys.size > 0) {
-          setNewlyAddedIds(freshKeys);
-        }
-
-        if (added > 0 && isBg) {
-          setToastNotification(`⚡ Live Auto-Stream: Added ${added} new CISA ICS advisory update${added > 1 ? 's' : ''}!`);
-          setTimeout(() => setToastNotification(null), 5000);
-        }
-
-        try {
-          localStorage.setItem("cisa_ics_accumulated_advisories_v2", JSON.stringify(compiled));
-          window.dispatchEvent(new Event("cisa_data_updated"));
-        } catch (e) {
-          console.warn("Failed to save compiled advisories to localStorage", e);
-        }
-
-        return compiled;
+      // 1. Add historical baseline
+      HISTORICAL_CISA_ADVISORIES.forEach((item) => {
+        const key = (item.advisoryId || item.id || item.link).toLowerCase();
+        if (key) map.set(key, item);
       });
 
-      setRetrievedAt(json.retrievedAt || new Date().toISOString());
-    } catch (err: any) {
-      console.warn("Failed to fetch live CISA feed", err);
-      setError("Unable to connect live XML stream. Retaining accumulated local advisory dataset.");
-    } finally {
-      setIsLoading(false);
-      setIsSyncingInBg(false);
-    }
+      // 2. Add items from localStorage
+      try {
+        const saved = localStorage.getItem("cisa_ics_accumulated_advisories_v2");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((item: CisaAdvisory) => {
+              const key = (item.advisoryId || item.id || item.link).toLowerCase();
+              if (key) map.set(key, item);
+            });
+          }
+        }
+      } catch (e) {}
+
+      // 3. Add existing state items
+      prev.forEach((item) => {
+        const key = (item.advisoryId || item.id || item.link).toLowerCase();
+        if (key) map.set(key, item);
+      });
+
+      // 4. Append new incoming entries from live stream
+      let added = 0;
+      const freshKeys = new Set<string>();
+      incoming.forEach((item) => {
+        const key = (item.advisoryId || item.id || item.link).toLowerCase();
+        if (key) {
+          if (!map.has(key)) {
+            added++;
+            freshKeys.add(key);
+            if (item.id) freshKeys.add(item.id.toLowerCase());
+            if (item.advisoryId) freshKeys.add(item.advisoryId.toLowerCase());
+          }
+          map.set(key, item);
+        }
+      });
+
+      const compiled = Array.from(map.values());
+      
+      // Sort chronologically newest first
+      compiled.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+
+      setNewAddedCount(added);
+      if (freshKeys.size > 0) {
+        setNewlyAddedIds(freshKeys);
+      }
+
+      if (added > 0 && isBg) {
+        setToastNotification(`⚡ Live Auto-Stream: Added ${added} new CISA ICS advisory update${added > 1 ? 's' : ''}!`);
+        setTimeout(() => setToastNotification(null), 5000);
+      }
+
+      try {
+        localStorage.setItem("cisa_ics_accumulated_advisories_v2", JSON.stringify(compiled));
+        window.dispatchEvent(new Event("cisa_data_updated"));
+      } catch (e) {
+        console.warn("Failed to save compiled advisories to localStorage", e);
+      }
+
+      return compiled;
+    });
+
+    setRetrievedAt(retrievedAtTimestamp);
+    setIsLoading(false);
+    setIsSyncingInBg(false);
   };
 
   // Initial live stream fetch on mount
