@@ -230,8 +230,8 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
 
       if (jsonFiles.length === 0) return [];
 
-      // Slice top 50 CSAF advisories
-      const selectedFiles = jsonFiles.slice(0, 50);
+      // Slice top 35 CSAF advisories
+      const selectedFiles = jsonFiles.slice(0, 35);
 
       const parsedResults = await Promise.all(
         selectedFiles.map(async (file) => {
@@ -737,34 +737,34 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
       </AnimatePresence>
 
       {/* Title & Live Status Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-red-900/40">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="p-1.5 rounded-lg bg-red-950 border border-red-700 text-red-400">
+      <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4 pb-4 border-b border-red-900/40">
+        <div className="min-w-0 max-w-full">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className="p-1.5 rounded-lg bg-red-950 border border-red-700 text-red-400 shrink-0">
               <ShieldAlert className="w-5 h-5 animate-pulse" />
             </span>
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2 flex-wrap">
               <span>CISA ICS Advisory Stream Integration</span>
-              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-red-950 border border-red-800 text-red-300">
+              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-red-950 border border-red-800 text-red-300 shrink-0">
                 Official XML Feed
               </span>
             </h3>
           </div>
-          <p className="text-xs text-slate-300 font-sans max-w-3xl">
+          <p className="text-xs text-slate-300 font-sans max-w-3xl leading-relaxed">
             Live cybersecurity advisories directly ingested from CISA&apos;s XML feed (<code className="text-cyan-300">https://www.cisa.gov/cybersecurity-advisories/ics-advisories.xml</code>) covering Operational Technology (OT), SCADA, and Critical Infrastructure Threats. Data streams automatically update and retain all previous advisory sets locally over time.
           </p>
         </div>
 
-        {/* Sync Status Controls */}
-        <div className="flex flex-wrap items-center gap-2 text-xs shrink-0">
+        {/* Sync Status Controls (Stacks under title when wide or constrained to stay strictly inside frame) */}
+        <div className="flex flex-wrap items-center gap-2 text-xs w-full xl:w-auto max-w-full justify-start xl:justify-end">
           {/* Auto-Stream Toggle & Timer */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-cyan-800/80 text-cyan-200">
+          <div className="flex flex-wrap items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-cyan-800/80 text-cyan-200 max-w-full">
             <button
               onClick={() => {
                 setAutoStreamEnabled(!autoStreamEnabled);
                 if (!autoStreamEnabled) setSecondsUntilNextSync(autoStreamIntervalSeconds);
               }}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer text-[10px] uppercase ${
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer text-[10px] uppercase shrink-0 ${
                 autoStreamEnabled
                   ? "bg-emerald-950 text-emerald-300 border border-emerald-700/80 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
                   : "bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200"
@@ -776,7 +776,7 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
             </button>
 
             {autoStreamEnabled && (
-              <span className="text-[10px] text-cyan-300 font-mono flex items-center gap-1">
+              <span className="text-[10px] text-cyan-300 font-mono flex items-center gap-1 shrink-0">
                 {isSyncingInBg ? (
                   <span className="text-amber-400 font-bold flex items-center gap-1">
                     <RefreshCw className="w-3 h-3 animate-spin" /> Syncing...
@@ -795,7 +795,7 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
                 setAutoStreamIntervalSeconds(val);
                 setSecondsUntilNextSync(val);
               }}
-              className="bg-slate-950 border border-slate-700 rounded text-[10px] text-cyan-300 px-1 py-0.5 font-mono cursor-pointer outline-none focus:border-cyan-500"
+              className="bg-slate-950 border border-slate-700 rounded text-[10px] text-cyan-300 px-1 py-0.5 font-mono cursor-pointer outline-none focus:border-cyan-500 shrink-0"
               title="Select Auto-Stream Polling Interval"
             >
               <option value={15}>15s</option>
@@ -805,16 +805,16 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
-            <Radio className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 shrink-0">
+            <Radio className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <span className="text-[11px]">Synced:</span>
             <span className="text-emerald-300 font-bold">
               {retrievedAt ? new Date(retrievedAt).toLocaleTimeString() : "Live"}
             </span>
           </div>
 
-          <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-cyan-300 text-[11px] font-bold flex items-center gap-1">
-            <Layers className="w-3.5 h-3.5 text-cyan-400" />
+          <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-cyan-300 text-[11px] font-bold flex items-center gap-1 shrink-0">
+            <Layers className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
             <span>Retained Dataset: {advisories.length}</span>
             {newAddedCount > 0 && (
               <span className="text-[10px] text-emerald-400 bg-emerald-950 border border-emerald-800 px-1.5 py-0.2 rounded ml-1">
@@ -826,7 +826,7 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
           <button
             onClick={() => fetchAdvisories({ isBackground: false })}
             disabled={isLoading || isSyncingInBg}
-            className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 font-bold"
+            className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 font-bold shrink-0"
             title="Ingest & compile fresh CISA XML Feed entries immediately"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading || isSyncingInBg ? "animate-spin text-amber-400" : "text-cyan-400"}`} />
@@ -834,19 +834,19 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
           </button>
 
           {/* Download Current Selection Dropdown */}
-          <div className="relative">
+          <div className="relative shrink-0 max-w-full">
             <button
               onClick={() => setDownloadHeaderOpen(!downloadHeaderOpen)}
-              className="px-3.5 py-1.5 bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-mono font-bold text-[11px] rounded-xl shadow-lg transition-all cursor-pointer flex items-center gap-1.5 border border-cyan-400/40"
+              className="px-3.5 py-1.5 bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-mono font-bold text-[11px] rounded-xl shadow-lg transition-all cursor-pointer flex items-center gap-1.5 border border-cyan-400/40 max-w-full"
               title="Download currently filtered CISA advisories in CSV or JSON format"
             >
-              <Download className="w-3.5 h-3.5 text-cyan-200" />
-              <span>Download Current Selection ({filteredAdvisories.length})</span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${downloadHeaderOpen ? "rotate-180" : ""}`} />
+              <Download className="w-3.5 h-3.5 text-cyan-200 shrink-0" />
+              <span className="truncate">Download Current Selection ({filteredAdvisories.length})</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform shrink-0 ${downloadHeaderOpen ? "rotate-180" : ""}`} />
             </button>
 
             {downloadHeaderOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-40 overflow-hidden font-mono text-xs py-1">
+              <div className="absolute right-0 sm:right-0 left-0 sm:left-auto mt-2 w-full sm:w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-40 overflow-hidden font-mono text-xs py-1 max-w-[calc(100vw-3rem)]">
                 <div className="px-3 py-1.5 border-b border-slate-800 text-[10px] text-slate-400 uppercase tracking-wider font-bold flex items-center justify-between">
                   <span>Export Selection</span>
                   <span className="text-cyan-400">{filteredAdvisories.length} items</span>
@@ -887,7 +887,7 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
 
           <button
             onClick={handleClearCache}
-            className="px-2.5 py-1.5 bg-slate-950 hover:bg-red-950/60 border border-slate-800 hover:border-red-800 text-slate-400 hover:text-red-300 rounded-xl transition-all cursor-pointer text-[10px]"
+            className="px-2.5 py-1.5 bg-slate-950 hover:bg-red-950/60 border border-slate-800 hover:border-red-800 text-slate-400 hover:text-red-300 rounded-xl transition-all cursor-pointer text-[10px] shrink-0"
             title="Reset compiled feed cache"
           >
             Reset Store
