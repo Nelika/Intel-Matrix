@@ -139,7 +139,109 @@ function deriveSectorsAndApts(titleAndSummary: string): { sectors: string[]; rel
   };
 }
 
+async function fetchCisaCsafFromGitHub(): Promise<CisaAdvisoryItem[]> {
+  try {
+    const response = await fetch("https://api.github.com/repos/cisagov/CSAF/contents/csaf_files/OT/white/2026", {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "Accept": "application/vnd.github.v3+json"
+      }
+    });
+
+    if (!response.ok) {
+      console.warn(`[CISA CSAF GitHub] API returned HTTP ${response.status}`);
+      return [];
+    }
+
+    const files: Array<{ name: string; download_url: string; type: string }> = await response.json();
+    if (!Array.isArray(files)) return [];
+
+    // Filter to only .json files (ignore .asc and .sha512 signatures)
+    const jsonFiles = files
+      .filter((f) => f.name.endsWith(".json") && !f.name.endsWith(".asc") && !f.name.endsWith(".sha512"))
+      .reverse();
+
+    if (jsonFiles.length === 0) return [];
+
+    // Fetch top 35 CSAF advisories in parallel
+    const selectedFiles = jsonFiles.slice(0, 35);
+
+    const parsedResults = await Promise.all(
+      selectedFiles.map(async (file) => {
+        try {
+          const res = await fetch(file.download_url);
+          if (!res.ok) return null;
+          const csaf = await res.json();
+          const doc = csaf.document || {};
+
+          const advisoryId = (doc.tracking?.id || file.name.replace(".json", "")).toUpperCase();
+          const title = doc.title || advisoryId;
+          const pubDateRaw = doc.tracking?.initial_release_date || doc.tracking?.current_release_date || new Date().toISOString();
+
+          const notes: Array<{ category: string; text: string; title?: string }> = doc.notes || [];
+          const summaryNote = notes.find((n) => n.category === "summary") || notes.find((n) => n.category === "description") || notes[0];
+          const rawSummary = summaryNote ? summaryNote.text : title;
+          const summary = cleanHtmlEntities(rawSummary);
+
+          const sectorNote = notes.find((n) => n.title?.toLowerCase().includes("sector") || n.category === "other");
+          const sectorText = sectorNote ? sectorNote.text : title + " " + summary;
+
+          const cves: string[] = [];
+          if (Array.isArray(csaf.vulnerabilities)) {
+            csaf.vulnerabilities.forEach((v: any) => {
+              if (v.cve) cves.push(v.cve.toUpperCase());
+            });
+          }
+          if (cves.length === 0) {
+            const matches = (title + " " + summary).match(/CVE-\d{4}-\d+/gi);
+            if (matches) {
+              matches.forEach((c) => cves.push(c.toUpperCase()));
+            }
+          }
+          const uniqueCves = Array.from(new Set(cves));
+
+          const vendor = extractVendor(title);
+          const { sectors, relatedAptIds } = deriveSectorsAndApts(title + " " + summary + " " + sectorText);
+
+          const parsedDate = new Date(pubDateRaw);
+          const isDateValid = !isNaN(parsedDate.getTime());
+          const pubDateIso = isDateValid ? parsedDate.toISOString() : new Date().toISOString();
+
+          return {
+            id: advisoryId.toLowerCase(),
+            advisoryId,
+            title,
+            link: `https://www.cisa.gov/news-events/ics-advisories/${advisoryId.toLowerCase()}`,
+            pubDate: pubDateIso,
+            vendor,
+            summary: summary.slice(0, 350) + (summary.length > 350 ? "..." : ""),
+            csafUrl: `https://github.com/cisagov/CSAF/blob/develop/csaf_files/OT/white/2026/${file.name}`,
+            cves: uniqueCves,
+            sectors,
+            relatedAptIds
+          };
+        } catch (err) {
+          return null;
+        }
+      })
+    );
+
+    const validAdvisories = parsedResults.filter((item) => item !== null) as CisaAdvisoryItem[];
+    return validAdvisories;
+  } catch (err) {
+    console.warn("[CISA CSAF GitHub Feed Exception]", err);
+    return [];
+  }
+}
+
 async function fetchCisaFeed(): Promise<CisaAdvisoryItem[]> {
+  // 1. First try GitHub CSAF Repository (Official, real-time, highly structured JSON for all CISA OT/ICS advisories)
+  const csafAdvisories = await fetchCisaCsafFromGitHub();
+  if (csafAdvisories.length > 0) {
+    return csafAdvisories;
+  }
+
+  // 2. Fallback to RSS Feed parsing
   const feedUrls = [
     "https://www.cisa.gov/cybersecurity-advisories/ics-advisories.xml",
     "https://www.cisa.gov/cybersecurity-advisories/all.xml"
@@ -177,8 +279,16 @@ async function fetchCisaFeed(): Promise<CisaAdvisoryItem[]> {
         const csafMatch = rawDesc.match(/https:\/\/github\.com\/cisagov\/CSAF\/blob\/[a-zA-Z0-9_\-\.\/]+/i);
         const csafUrl = csafMatch ? csafMatch[0] : undefined;
 
-        const advisoryIdMatch = link.match(/icsa-[\d-]+/i) || link.match(/icsma-[\d-]+/i) || link.match(/icsa-[\d]+/i);
-        const advisoryId = advisoryIdMatch ? advisoryIdMatch[0].toUpperCase() : `ICSA-26-${idx + 100}`;
+        const advisoryIdMatch = link.match(/icsa-[\d-]+/i) || link.match(/icsma-[\d-]+/i) || title.match(/icsa-[\d-]+/i);
+        let advisoryId = advisoryIdMatch ? advisoryIdMatch[0].toUpperCase() : "";
+        if (!advisoryId) {
+          const slugMatch = link.match(/\/([a-zA-Z0-9\-]+)\/?$/);
+          if (slugMatch && slugMatch[1] && slugMatch[1].length > 4) {
+            advisoryId = `CISA-${slugMatch[1].toUpperCase().slice(0, 30)}`;
+          } else {
+            advisoryId = `ICSA-26-${idx + 100}`;
+          }
+        }
 
         const cveMatches = (rawDesc + " " + title).match(/CVE-\d{4}-\d+/gi);
         const cves = cveMatches ? Array.from(new Set(cveMatches.map((c) => c.toUpperCase()))) : [];
