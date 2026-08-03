@@ -230,8 +230,8 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
 
       if (jsonFiles.length === 0) return [];
 
-      // Slice top 25 CSAF advisories
-      const selectedFiles = jsonFiles.slice(0, 25);
+      // Slice top 50 CSAF advisories
+      const selectedFiles = jsonFiles.slice(0, 50);
 
       const parsedResults = await Promise.all(
         selectedFiles.map(async (file) => {

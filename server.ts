@@ -163,8 +163,8 @@ async function fetchCisaCsafFromGitHub(): Promise<CisaAdvisoryItem[]> {
 
     if (jsonFiles.length === 0) return [];
 
-    // Fetch top 35 CSAF advisories in parallel
-    const selectedFiles = jsonFiles.slice(0, 35);
+    // Fetch top 50 CSAF advisories in parallel
+    const selectedFiles = jsonFiles.slice(0, 50);
 
     const parsedResults = await Promise.all(
       selectedFiles.map(async (file) => {
@@ -263,7 +263,7 @@ async function fetchCisaFeed(): Promise<CisaAdvisoryItem[]> {
 
       if (rawItems.length === 0) continue;
 
-      const parsedItems: CisaAdvisoryItem[] = rawItems.slice(0, 35).map((raw, idx) => {
+      const parsedItems: CisaAdvisoryItem[] = rawItems.slice(0, 50).map((raw, idx) => {
         const titleMatch = raw.match(/<title>(.*?)<\/title>/s);
         const linkMatch = raw.match(/<link>(.*?)<\/link>/s) || raw.match(/href=["'](.*?)["']/);
         const pubDateMatch = raw.match(/<pubDate>(.*?)<\/pubDate>/s) || raw.match(/<dc:date>(.*?)<\/dc:date>/s) || raw.match(/<updated>(.*?)<\/updated>/s);

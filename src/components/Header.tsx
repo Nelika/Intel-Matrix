@@ -65,17 +65,17 @@ export const Header: React.FC<HeaderProps> = ({
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [isManualCollapsed, setIsManualCollapsed] = useState<boolean | null>(null);
 
-  // Hysteresis scroll listener to prevent jitter/flicker at scroll threshold
+  // Hysteresis scroll listener with passive scroll & debounced threshold to prevent jitter/flicker
   useEffect(() => {
     let ticking = false;
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentY = window.scrollY;
-          // Use 90px trigger down, 20px trigger up to create a 70px hysteresis deadzone
-          if (currentY > 90) {
+          // Smooth hysteresis threshold: collapse at > 120px down, expand at < 30px up
+          if (currentY > 120) {
             setIsScrolled(true);
-          } else if (currentY < 20) {
+          } else if (currentY < 30) {
             setIsScrolled(false);
             setIsManualCollapsed(null);
           }
