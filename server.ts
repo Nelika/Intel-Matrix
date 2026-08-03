@@ -74,6 +74,7 @@ const FALLBACK_ADVISORIES: CisaAdvisoryItem[] = [
 
 function cleanHtmlEntities(str: string): string {
   return str
+    .replace(/&nbsp;/g, " ")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
@@ -85,7 +86,8 @@ function cleanHtmlEntities(str: string): string {
 }
 
 function extractVendor(title: string): string {
-  const parts = title.split(" ");
+  const cleaned = title.replace(/^CISA\s+Adds\s+/i, "").replace(/^ICS\s+Advisory\s+/i, "").trim();
+  const parts = cleaned.split(" ");
   if (parts.length > 1) {
     return `${parts[0]} ${parts[1]}`.replace(/[/,:-]/g, "").trim();
   }
@@ -107,13 +109,13 @@ function deriveSectorsAndApts(titleAndSummary: string): { sectors: string[]; rel
     aptsSet.add("VOLT_TYPHOON");
     aptsSet.add("APT27");
   }
-  if (text.includes("manufactur") || text.includes("automation") || text.includes("plc") || text.includes("igss") || text.includes("control")) {
+  if (text.includes("manufactur") || text.includes("automation") || text.includes("plc") || text.includes("igss") || text.includes("control") || text.includes("siemens") || text.includes("schneider") || text.includes("rockwell")) {
     sectorsSet.add("Critical Manufacturing");
     aptsSet.add("APT41");
     aptsSet.add("APT10");
     aptsSet.add("APT1");
   }
-  if (text.includes("telecom") || text.includes("router") || text.includes("network") || text.includes("mikrotik")) {
+  if (text.includes("telecom") || text.includes("router") || text.includes("network") || text.includes("mikrotik") || text.includes("arista")) {
     sectorsSet.add("Telecommunications");
     sectorsSet.add("Information Technology");
     aptsSet.add("VOLT_TYPHOON");
@@ -138,71 +140,84 @@ function deriveSectorsAndApts(titleAndSummary: string): { sectors: string[]; rel
 }
 
 async function fetchCisaFeed(): Promise<CisaAdvisoryItem[]> {
-  try {
-    const response = await fetch("https://www.cisa.gov/cybersecurity-advisories/all.xml", {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept": "application/xml, text/xml, */*"
+  const feedUrls = [
+    "https://www.cisa.gov/cybersecurity-advisories/ics-advisories.xml",
+    "https://www.cisa.gov/cybersecurity-advisories/all.xml"
+  ];
+
+  for (const url of feedUrls) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+          "Accept": "application/rss+xml, application/xml, text/xml, */*"
+        }
+      });
+
+      if (!response.ok) continue;
+
+      const xml = await response.text();
+      const rawItems = xml.includes("<item>") ? xml.split("<item>").slice(1) : xml.split("<entry>").slice(1);
+
+      if (rawItems.length === 0) continue;
+
+      const parsedItems: CisaAdvisoryItem[] = rawItems.slice(0, 35).map((raw, idx) => {
+        const titleMatch = raw.match(/<title>(.*?)<\/title>/s);
+        const linkMatch = raw.match(/<link>(.*?)<\/link>/s) || raw.match(/href=["'](.*?)["']/);
+        const pubDateMatch = raw.match(/<pubDate>(.*?)<\/pubDate>/s) || raw.match(/<dc:date>(.*?)<\/dc:date>/s) || raw.match(/<updated>(.*?)<\/updated>/s);
+        const descMatch = raw.match(/<description>(.*?)<\/description>/s) || raw.match(/<summary>(.*?)<\/summary>/s);
+
+        const title = titleMatch ? cleanHtmlEntities(titleMatch[1]) : `ICS Advisory ${idx + 1}`;
+        const link = linkMatch ? linkMatch[1].trim() : "https://www.cisa.gov/news-events/ics-advisories";
+        const pubDateRaw = pubDateMatch ? pubDateMatch[1].trim() : "";
+        const rawDesc = descMatch ? descMatch[1] : "";
+
+        const cleanedDesc = cleanHtmlEntities(rawDesc);
+        
+        const csafMatch = rawDesc.match(/https:\/\/github\.com\/cisagov\/CSAF\/blob\/[a-zA-Z0-9_\-\.\/]+/i);
+        const csafUrl = csafMatch ? csafMatch[0] : undefined;
+
+        const advisoryIdMatch = link.match(/icsa-[\d-]+/i) || link.match(/icsma-[\d-]+/i) || link.match(/icsa-[\d]+/i);
+        const advisoryId = advisoryIdMatch ? advisoryIdMatch[0].toUpperCase() : `ICSA-26-${idx + 100}`;
+
+        const cveMatches = (rawDesc + " " + title).match(/CVE-\d{4}-\d+/gi);
+        const cves = cveMatches ? Array.from(new Set(cveMatches.map((c) => c.toUpperCase()))) : [];
+
+        const vendor = extractVendor(title);
+        const { sectors, relatedAptIds } = deriveSectorsAndApts(title + " " + cleanedDesc);
+
+        let pubDateIso = new Date().toISOString();
+        if (pubDateRaw) {
+          const parsed = new Date(pubDateRaw);
+          if (!isNaN(parsed.getTime())) {
+            pubDateIso = parsed.toISOString();
+          }
+        }
+
+        return {
+          id: advisoryId.toLowerCase(),
+          advisoryId,
+          title,
+          link,
+          pubDate: pubDateIso,
+          vendor,
+          summary: cleanedDesc.slice(0, 320) + (cleanedDesc.length > 320 ? "..." : ""),
+          csafUrl,
+          cves,
+          sectors,
+          relatedAptIds
+        };
+      });
+
+      if (parsedItems.length > 0) {
+        return parsedItems;
       }
-    });
-
-    if (!response.ok) {
-      console.warn(`[CISA Feed] Remote XML returned status ${response.status}, using fallbacks`);
-      return FALLBACK_ADVISORIES;
+    } catch (e) {
+      console.warn(`[CISA Feed Attempt Failed for ${url}]`, e);
     }
-
-    const xml = await response.text();
-    const rawItems = xml.split("<item>").slice(1);
-
-    if (rawItems.length === 0) {
-      return FALLBACK_ADVISORIES;
-    }
-
-    const parsedItems: CisaAdvisoryItem[] = rawItems.slice(0, 30).map((raw, idx) => {
-      const titleMatch = raw.match(/<title>(.*?)<\/title>/s);
-      const linkMatch = raw.match(/<link>(.*?)<\/link>/s);
-      const pubDateMatch = raw.match(/<pubDate>(.*?)<\/pubDate>/s) || raw.match(/<dc:date>(.*?)<\/dc:date>/s);
-      const descMatch = raw.match(/<description>(.*?)<\/description>/s);
-
-      const title = titleMatch ? cleanHtmlEntities(titleMatch[1]) : `ICS Advisory ${idx + 1}`;
-      const link = linkMatch ? linkMatch[1].trim() : "https://www.cisa.gov/news-events/ics-advisories";
-      const pubDateRaw = pubDateMatch ? pubDateMatch[1].trim() : new Date().toISOString();
-      const rawDesc = descMatch ? descMatch[1] : "";
-
-      const cleanedDesc = cleanHtmlEntities(rawDesc);
-      
-      const csafMatch = rawDesc.match(/https:\/\/github\.com\/cisagov\/CSAF\/blob\/[^\s"]+/i);
-      const csafUrl = csafMatch ? csafMatch[0].replace(/&quot;/g, "").replace(/&amp;/g, "&") : undefined;
-
-      const advisoryIdMatch = link.match(/icsa-[\d-]+/i) || link.match(/icsma-[\d-]+/i) || link.match(/icsa-[\d]+/i);
-      const advisoryId = advisoryIdMatch ? advisoryIdMatch[0].toUpperCase() : `ICSA-${idx + 100}`;
-
-      const cveMatches = (rawDesc + " " + title).match(/CVE-\d{4}-\d+/gi);
-      const cves = cveMatches ? Array.from(new Set(cveMatches.map((c) => c.toUpperCase()))) : [];
-
-      const vendor = extractVendor(title);
-      const { sectors, relatedAptIds } = deriveSectorsAndApts(title + " " + cleanedDesc);
-
-      return {
-        id: advisoryId.toLowerCase(),
-        advisoryId,
-        title,
-        link,
-        pubDate: new Date(pubDateRaw).isValid ? new Date(pubDateRaw).toISOString() : new Date().toISOString(),
-        vendor,
-        summary: cleanedDesc.slice(0, 320) + (cleanedDesc.length > 320 ? "..." : ""),
-        csafUrl,
-        cves,
-        sectors,
-        relatedAptIds
-      };
-    });
-
-    return parsedItems;
-  } catch (err) {
-    console.error("[CISA Feed Error]", err);
-    return FALLBACK_ADVISORIES;
   }
+
+  return FALLBACK_ADVISORIES;
 }
 
 // Extension on Date prototype safety helper

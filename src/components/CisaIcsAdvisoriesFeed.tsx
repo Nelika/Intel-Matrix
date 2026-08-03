@@ -143,17 +143,57 @@ const getVulnerabilityImpact = (advisory: CisaAdvisory) => {
   return { score, percentage, badgeClass, barColor, textColor, level, category };
 };
 
+import { HISTORICAL_CISA_ADVISORIES } from "../data/cisaHistoricalAdvisories";
+
 export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
   aptGroups,
   onSelectApt,
   onFilterBySector,
 }) => {
-  const [advisories, setAdvisories] = useState<CisaAdvisory[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Synchronous initialization combining baseline + localStorage
+  const [advisories, setAdvisories] = useState<CisaAdvisory[]>(() => {
+    const map = new Map<string, CisaAdvisory>();
+    
+    // 1. Load baseline historical dataset
+    HISTORICAL_CISA_ADVISORIES.forEach((item) => {
+      const key = (item.advisoryId || item.id || item.link).toLowerCase();
+      if (key) map.set(key, item);
+    });
+
+    // 2. Merge accumulated localStorage dataset
+    try {
+      const saved = localStorage.getItem("cisa_ics_accumulated_advisories_v2");
+      if (saved) {
+        const parsed: CisaAdvisory[] = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((item) => {
+            const key = (item.advisoryId || item.id || item.link).toLowerCase();
+            if (key) map.set(key, item);
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("Could not read accumulated CISA advisories from localStorage", e);
+    }
+
+    const compiled = Array.from(map.values());
+    compiled.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+    return compiled;
+  });
+
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSyncingInBg, setIsSyncingInBg] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [retrievedAt, setRetrievedAt] = useState<string>("");
   const [newAddedCount, setNewAddedCount] = useState<number>(0);
   const [newlyAddedIds, setNewlyAddedIds] = useState<Set<string>>(new Set());
+
+  // Auto-stream configuration state
+  const [autoStreamEnabled, setAutoStreamEnabled] = useState<boolean>(true);
+  const [autoStreamIntervalSeconds, setAutoStreamIntervalSeconds] = useState<number>(30);
+  const [secondsUntilNextSync, setSecondsUntilNextSync] = useState<number>(30);
+  const [toastNotification, setToastNotification] = useState<string | null>(null);
+
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedSector, setSelectedSector] = useState<string>("ALL");
   const [selectedVendor, setSelectedVendor] = useState<string>("ALL");
@@ -167,26 +207,16 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
   const [downloadToolbarOpen, setDownloadToolbarOpen] = useState<boolean>(false);
   const [hoveredTrendDayIndex, setHoveredTrendDayIndex] = useState<number | null>(null);
 
-  // Load compiled advisories from localStorage on mount & fetch live stream to append/compile
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("cisa_ics_accumulated_advisories_v2");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setAdvisories(parsed);
-        }
-      }
-    } catch (e) {
-      console.warn("Could not read accumulated CISA advisories from localStorage", e);
+  // Fetch CISA Advisories from backend API & compile with baseline + stored dataset
+  const fetchAdvisories = async (options?: { isBackground?: boolean }) => {
+    const isBg = options?.isBackground ?? false;
+    if (isBg) {
+      setIsSyncingInBg(true);
+    } else {
+      setIsLoading(true);
     }
-    fetchAdvisories();
-  }, []);
-
-  // Fetch CISA Advisories from backend API & compile with stored dataset
-  const fetchAdvisories = async () => {
-    setIsLoading(true);
     setError(null);
+
     try {
       const res = await fetch("/api/cisa-advisories");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -196,23 +226,43 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
       setAdvisories((prev) => {
         const map = new Map<string, CisaAdvisory>();
 
-        // 1. Load existing compiled database entries
-        prev.forEach((item) => {
-          const key = item.advisoryId || item.id || item.link;
+        // 1. Add historical baseline
+        HISTORICAL_CISA_ADVISORIES.forEach((item) => {
+          const key = (item.advisoryId || item.id || item.link).toLowerCase();
           if (key) map.set(key, item);
         });
 
-        // 2. Append new incoming entries from live XML stream
+        // 2. Add items from localStorage
+        try {
+          const saved = localStorage.getItem("cisa_ics_accumulated_advisories_v2");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) {
+              parsed.forEach((item: CisaAdvisory) => {
+                const key = (item.advisoryId || item.id || item.link).toLowerCase();
+                if (key) map.set(key, item);
+              });
+            }
+          }
+        } catch (e) {}
+
+        // 3. Add existing state items
+        prev.forEach((item) => {
+          const key = (item.advisoryId || item.id || item.link).toLowerCase();
+          if (key) map.set(key, item);
+        });
+
+        // 4. Append new incoming entries from live XML stream
         let added = 0;
         const freshKeys = new Set<string>();
         incoming.forEach((item) => {
-          const key = item.advisoryId || item.id || item.link;
+          const key = (item.advisoryId || item.id || item.link).toLowerCase();
           if (key) {
             if (!map.has(key)) {
               added++;
               freshKeys.add(key);
-              if (item.id) freshKeys.add(item.id);
-              if (item.advisoryId) freshKeys.add(item.advisoryId);
+              if (item.id) freshKeys.add(item.id.toLowerCase());
+              if (item.advisoryId) freshKeys.add(item.advisoryId.toLowerCase());
             }
             map.set(key, item);
           }
@@ -228,6 +278,11 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
           setNewlyAddedIds(freshKeys);
         }
 
+        if (added > 0 && isBg) {
+          setToastNotification(`⚡ Live Auto-Stream: Added ${added} new CISA ICS advisory update${added > 1 ? 's' : ''}!`);
+          setTimeout(() => setToastNotification(null), 5000);
+        }
+
         try {
           localStorage.setItem("cisa_ics_accumulated_advisories_v2", JSON.stringify(compiled));
           window.dispatchEvent(new Event("cisa_data_updated"));
@@ -241,18 +296,48 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
       setRetrievedAt(json.retrievedAt || new Date().toISOString());
     } catch (err: any) {
       console.warn("Failed to fetch live CISA feed", err);
-      setError("Unable to connect live XML stream. Displaying accumulated local advisory database.");
+      setError("Unable to connect live XML stream. Retaining accumulated local advisory dataset.");
     } finally {
       setIsLoading(false);
+      setIsSyncingInBg(false);
     }
   };
+
+  // Initial live stream fetch on mount
+  useEffect(() => {
+    fetchAdvisories({ isBackground: false });
+  }, []);
+
+  // Auto-stream countdown timer effect
+  useEffect(() => {
+    if (!autoStreamEnabled) return;
+
+    const timer = setInterval(() => {
+      setSecondsUntilNextSync((prev) => {
+        if (prev <= 1) {
+          fetchAdvisories({ isBackground: true });
+          return autoStreamIntervalSeconds;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [autoStreamEnabled, autoStreamIntervalSeconds]);
 
   // Clear accumulated cache
   const handleClearCache = () => {
     if (window.confirm("Reset accumulated CISA advisory cache and reload fresh feed?")) {
       localStorage.removeItem("cisa_ics_accumulated_advisories_v2");
-      setAdvisories([]);
-      fetchAdvisories();
+      const baselineMap = new Map<string, CisaAdvisory>();
+      HISTORICAL_CISA_ADVISORIES.forEach((item) => {
+        const key = (item.advisoryId || item.id || item.link).toLowerCase();
+        if (key) baselineMap.set(key, item);
+      });
+      const baselineCompiled = Array.from(baselineMap.values());
+      baselineCompiled.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+      setAdvisories(baselineCompiled);
+      fetchAdvisories({ isBackground: false });
     }
   };
 
@@ -461,6 +546,29 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
       {/* Top Laser Accent */}
       <div className="h-1 w-full bg-gradient-to-r from-red-600 via-amber-500 to-cyan-500 absolute top-0 left-0 right-0" />
 
+      {/* Toast Notification for Auto-Stream Updates */}
+      <AnimatePresence>
+        {toastNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="mb-4 p-3 rounded-xl bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-900 border border-emerald-500/80 text-emerald-200 text-xs font-mono font-bold shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-emerald-400 animate-bounce" />
+              <span>{toastNotification}</span>
+            </div>
+            <button
+              onClick={() => setToastNotification(null)}
+              className="text-emerald-400 hover:text-white text-xs px-2 py-0.5 rounded bg-emerald-900/50 hover:bg-emerald-800 border border-emerald-700/60 cursor-pointer"
+            >
+              Dismiss
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Title & Live Status Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-red-900/40">
         <div>
@@ -476,14 +584,62 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
             </h3>
           </div>
           <p className="text-xs text-slate-300 font-sans max-w-3xl">
-            Live cybersecurity advisories directly ingested from CISA&apos;s XML feed (<code className="text-cyan-300">https://www.cisa.gov/cybersecurity-advisories/all.xml</code>) covering Operational Technology (OT), SCADA, and Critical Infrastructure Threats. Data streams are automatically compiled and preserved locally over time.
+            Live cybersecurity advisories directly ingested from CISA&apos;s XML feed (<code className="text-cyan-300">https://www.cisa.gov/cybersecurity-advisories/ics-advisories.xml</code>) covering Operational Technology (OT), SCADA, and Critical Infrastructure Threats. Data streams automatically update and retain all previous advisory sets locally over time.
           </p>
         </div>
 
         {/* Sync Status Controls */}
         <div className="flex flex-wrap items-center gap-2 text-xs shrink-0">
+          {/* Auto-Stream Toggle & Timer */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-cyan-800/80 text-cyan-200">
+            <button
+              onClick={() => {
+                setAutoStreamEnabled(!autoStreamEnabled);
+                if (!autoStreamEnabled) setSecondsUntilNextSync(autoStreamIntervalSeconds);
+              }}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer text-[10px] uppercase ${
+                autoStreamEnabled
+                  ? "bg-emerald-950 text-emerald-300 border border-emerald-700/80 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                  : "bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200"
+              }`}
+              title={autoStreamEnabled ? "Auto-Stream Active. Click to pause background sync." : "Auto-Stream Paused. Click to enable automatic polling."}
+            >
+              <Radio className={`w-3 h-3 ${autoStreamEnabled ? "text-emerald-400 animate-ping" : "text-slate-500"}`} />
+              <span>{autoStreamEnabled ? "Auto-Sync ON" : "Auto-Sync PAUSED"}</span>
+            </button>
+
+            {autoStreamEnabled && (
+              <span className="text-[10px] text-cyan-300 font-mono flex items-center gap-1">
+                {isSyncingInBg ? (
+                  <span className="text-amber-400 font-bold flex items-center gap-1">
+                    <RefreshCw className="w-3 h-3 animate-spin" /> Syncing...
+                  </span>
+                ) : (
+                  <span>Sync in <strong className="text-emerald-400">{secondsUntilNextSync}s</strong></span>
+                )}
+              </span>
+            )}
+
+            {/* Interval Selector */}
+            <select
+              value={autoStreamIntervalSeconds}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                setAutoStreamIntervalSeconds(val);
+                setSecondsUntilNextSync(val);
+              }}
+              className="bg-slate-950 border border-slate-700 rounded text-[10px] text-cyan-300 px-1 py-0.5 font-mono cursor-pointer outline-none focus:border-cyan-500"
+              title="Select Auto-Stream Polling Interval"
+            >
+              <option value={15}>15s</option>
+              <option value={30}>30s</option>
+              <option value={60}>60s</option>
+              <option value={120}>2m</option>
+            </select>
+          </div>
+
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
-            <Radio className="w-3.5 h-3.5 text-emerald-400 animate-ping" />
+            <Radio className="w-3.5 h-3.5 text-emerald-400" />
             <span className="text-[11px]">Synced:</span>
             <span className="text-emerald-300 font-bold">
               {retrievedAt ? new Date(retrievedAt).toLocaleTimeString() : "Live"}
@@ -492,7 +648,7 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
 
           <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-cyan-300 text-[11px] font-bold flex items-center gap-1">
             <Layers className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Compiled Store: {advisories.length}</span>
+            <span>Retained Dataset: {advisories.length}</span>
             {newAddedCount > 0 && (
               <span className="text-[10px] text-emerald-400 bg-emerald-950 border border-emerald-800 px-1.5 py-0.2 rounded ml-1">
                 +{newAddedCount} new
@@ -501,13 +657,13 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
           </div>
 
           <button
-            onClick={fetchAdvisories}
-            disabled={isLoading}
+            onClick={() => fetchAdvisories({ isBackground: false })}
+            disabled={isLoading || isSyncingInBg}
             className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 font-bold"
-            title="Ingest & compile fresh CISA XML Feed entries"
+            title="Ingest & compile fresh CISA XML Feed entries immediately"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-amber-400" : "text-cyan-400"}`} />
-            <span className="text-[11px]">Compile Feed</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading || isSyncingInBg ? "animate-spin text-amber-400" : "text-cyan-400"}`} />
+            <span className="text-[11px]">Sync Stream Now</span>
           </button>
 
           {/* Download Current Selection Dropdown */}
