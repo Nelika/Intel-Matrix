@@ -26,8 +26,10 @@ import {
   TrendingUp,
   BarChart2,
   Activity,
+  Clock,
 } from "lucide-react";
 import { AptGroup } from "../types";
+import { HISTORICAL_CISA_ADVISORIES, sanitizeCisaLink } from "../data/cisaHistoricalAdvisories";
 
 export interface CisaAdvisory {
   id: string;
@@ -143,8 +145,6 @@ const getVulnerabilityImpact = (advisory: CisaAdvisory) => {
   return { score, percentage, badgeClass, barColor, textColor, level, category };
 };
 
-import { HISTORICAL_CISA_ADVISORIES } from "../data/cisaHistoricalAdvisories";
-
 export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
   aptGroups,
   onSelectApt,
@@ -176,7 +176,10 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
       console.warn("Could not read accumulated CISA advisories from localStorage", e);
     }
 
-    const compiled = Array.from(map.values());
+    const compiled = Array.from(map.values()).map((item) => ({
+      ...item,
+      link: sanitizeCisaLink(item.link, item.advisoryId),
+    }));
     compiled.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
     return compiled;
   });
@@ -341,11 +344,23 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
             const isDateValid = !isNaN(parsedDate.getTime());
             const pubDateIso = isDateValid ? parsedDate.toISOString() : new Date().toISOString();
 
+            let webLink = "";
+            if (Array.isArray(doc.references)) {
+              const webRef =
+                doc.references.find(
+                  (r: any) =>
+                    r.url &&
+                    r.url.includes("cisa.gov/news-events/") &&
+                    (r.summary?.toLowerCase().includes("web version") || r.category === "self")
+                ) || doc.references.find((r: any) => r.url && r.url.includes("cisa.gov/news-events/"));
+              if (webRef?.url) webLink = webRef.url;
+            }
+
             return {
               id: advisoryId.toLowerCase(),
               advisoryId,
               title,
-              link: `https://www.cisa.gov/news-events/ics-advisories/${advisoryId.toLowerCase()}`,
+              link: sanitizeCisaLink(webLink, advisoryId),
               pubDate: pubDateIso,
               vendor,
               summary: summary.slice(0, 350) + (summary.length > 350 ? "..." : ""),
@@ -440,7 +455,10 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
         }
       });
 
-      const compiled = Array.from(map.values());
+      const compiled = Array.from(map.values()).map((item) => ({
+        ...item,
+        link: sanitizeCisaLink(item.link, item.advisoryId),
+      }));
       
       // Sort chronologically newest first
       compiled.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
@@ -805,12 +823,17 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 shrink-0">
-            <Radio className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span className="text-[11px]">Synced:</span>
-            <span className="text-emerald-300 font-bold">
-              {retrievedAt ? new Date(retrievedAt).toLocaleTimeString() : "Live"}
-            </span>
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-emerald-900/60 text-slate-300 shrink-0 shadow-inner"
+            title={retrievedAt ? `Last Sync: ${new Date(retrievedAt).toLocaleString()}` : "Stream is live"}
+          >
+            <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0 animate-pulse" />
+            <div className="flex flex-col text-[10px] leading-tight">
+              <span className="text-slate-400 font-semibold uppercase tracking-wider">Last Updated</span>
+              <span className="text-emerald-300 font-bold font-mono">
+                {retrievedAt ? new Date(retrievedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : "Just now"}
+              </span>
+            </div>
           </div>
 
           <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-cyan-300 text-[11px] font-bold flex items-center gap-1 shrink-0">
@@ -824,13 +847,18 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
           </div>
 
           <button
-            onClick={() => fetchAdvisories({ isBackground: false })}
+            onClick={() => {
+              fetchAdvisories({ isBackground: false });
+              if (autoStreamEnabled) setSecondsUntilNextSync(autoStreamIntervalSeconds);
+            }}
             disabled={isLoading || isSyncingInBg}
-            className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 font-bold shrink-0"
-            title="Ingest & compile fresh CISA XML Feed entries immediately"
+            className="px-3.5 py-1.5 bg-gradient-to-r from-cyan-950 via-slate-900 to-slate-900 hover:from-cyan-900 hover:to-slate-800 border border-cyan-700/60 text-cyan-300 hover:text-white rounded-xl transition-all cursor-pointer flex items-center gap-1.5 font-bold shrink-0 shadow-lg hover:border-cyan-400 active:scale-95 disabled:opacity-50"
+            title="Re-fetch & compile latest CISA XML Feed entries immediately"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading || isSyncingInBg ? "animate-spin text-amber-400" : "text-cyan-400"}`} />
-            <span className="text-[11px]">Sync Stream Now</span>
+            <span className="text-[11px] uppercase tracking-wide">
+              {isLoading || isSyncingInBg ? "Refreshing..." : "Refresh Feed"}
+            </span>
           </button>
 
           {/* Download Current Selection Dropdown */}
@@ -1550,7 +1578,7 @@ export const CisaIcsAdvisoriesFeed: React.FC<CisaIcsAdvisoriesFeedProps> = ({
                     {/* Action Bar */}
                     <div className="flex items-center justify-between pt-1 text-[11px]">
                       <a
-                        href={advisory.link}
+                        href={sanitizeCisaLink(advisory.link, advisory.advisoryId)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-red-400 hover:text-red-300 font-bold flex items-center gap-1 underline"

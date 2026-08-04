@@ -22,7 +22,7 @@ const FALLBACK_ADVISORIES: CisaAdvisoryItem[] = [
     id: "icsa-26-216-01",
     advisoryId: "ICSA-26-216-01",
     title: "Siemens SIMATIC S7-1200 & S7-1500 Controller Communication Stack",
-    link: "https://www.cisa.gov/news-events/ics-advisories/icsa-26-216-01",
+    link: "https://www.cisa.gov/news-events/ics-advisories?search=ICSA-26-216-01",
     pubDate: "2026-08-04T14:30:00Z",
     vendor: "Siemens",
     summary: "Unauthenticated buffer overflow in SIMATIC S7-1200 and S7-1500 CPU firmware allows remote code execution over PROFINET network interfaces, potentially enabling unauthorized PLC operational state manipulation in power generation facilities.",
@@ -35,7 +35,7 @@ const FALLBACK_ADVISORIES: CisaAdvisoryItem[] = [
     id: "icsa-26-216-02",
     advisoryId: "ICSA-26-216-02",
     title: "Schneider Electric Modicon M580 PAC Memory Corruption",
-    link: "https://www.cisa.gov/news-events/ics-advisories/icsa-26-216-02",
+    link: "https://www.cisa.gov/news-events/ics-advisories?search=ICSA-26-216-02",
     pubDate: "2026-08-04T11:15:00Z",
     vendor: "Schneider Electric",
     summary: "A memory corruption vulnerability in Schneider Electric Modicon M580 Programmable Automation Controllers could allow an attacker to send crafted Modbus TCP packets causing loss of safety system monitoring in chemical processing plants.",
@@ -48,7 +48,7 @@ const FALLBACK_ADVISORIES: CisaAdvisoryItem[] = [
     id: "icsa-26-215-01",
     advisoryId: "ICSA-26-215-01",
     title: "Rockwell Automation FactoryTalk Linx Remote Code Execution",
-    link: "https://www.cisa.gov/news-events/ics-advisories/icsa-26-215-01",
+    link: "https://www.cisa.gov/news-events/ics-advisories?search=ICSA-26-215-01",
     pubDate: "2026-08-03T16:00:00Z",
     vendor: "Rockwell Automation",
     summary: "Deserialization of untrusted data in Rockwell Automation FactoryTalk Linx communication service enables unauthenticated remote attackers to execute arbitrary system code with SYSTEM privileges on industrial workstations.",
@@ -61,7 +61,7 @@ const FALLBACK_ADVISORIES: CisaAdvisoryItem[] = [
     id: "icsa-26-215-02",
     advisoryId: "ICSA-26-215-02",
     title: "ABB TOTALFLOW Remote Terminal Unit Authentication Bypass",
-    link: "https://www.cisa.gov/news-events/ics-advisories/icsa-26-215-02",
+    link: "https://www.cisa.gov/news-events/ics-advisories?search=ICSA-26-215-02",
     pubDate: "2026-08-03T10:20:00Z",
     vendor: "ABB",
     summary: "Authentication bypass vulnerability in ABB TOTALFLOW G4 and G5 Remote Terminal Units allows attackers to remotely tamper with gas flow metering telemetry and telemetry logging mechanisms.",
@@ -74,7 +74,7 @@ const FALLBACK_ADVISORIES: CisaAdvisoryItem[] = [
     id: "icsa-26-214-01",
     advisoryId: "ICSA-26-214-01",
     title: "Emerson DeltaV DCS Controller Path Traversal",
-    link: "https://www.cisa.gov/news-events/ics-advisories/icsa-26-214-01",
+    link: "https://www.cisa.gov/news-events/ics-advisories?search=ICSA-26-214-01",
     pubDate: "2026-08-02T15:45:00Z",
     vendor: "Emerson",
     summary: "A path traversal flaw in Emerson DeltaV Distributed Control System Workstation management APIs allows unauthorized write operations to system files, risking denial-of-service in water treatment facilities.",
@@ -87,7 +87,7 @@ const FALLBACK_ADVISORIES: CisaAdvisoryItem[] = [
     id: "icsa-26-214-02",
     advisoryId: "ICSA-26-214-02",
     title: "Phoenix Contact mGuard Industrial Router Denial of Service",
-    link: "https://www.cisa.gov/news-events/ics-advisories/icsa-26-214-02",
+    link: "https://www.cisa.gov/news-events/ics-advisories?search=ICSA-26-214-02",
     pubDate: "2026-08-02T09:30:00Z",
     vendor: "Phoenix Contact",
     summary: "Improper input validation in Phoenix Contact mGuard security appliances allows unauthenticated network attackers to crash OT perimeter VPN gateways via malformed IPsec negotiation packets.",
@@ -100,7 +100,7 @@ const FALLBACK_ADVISORIES: CisaAdvisoryItem[] = [
     id: "icsa-26-213-01",
     advisoryId: "ICSA-26-213-01",
     title: "GE Vernova Mark VIe Controller Firmware Integrity Bypass",
-    link: "https://www.cisa.gov/news-events/ics-advisories/icsa-26-213-01",
+    link: "https://www.cisa.gov/news-events/ics-advisories?search=ICSA-26-213-01",
     pubDate: "2026-08-01T13:10:00Z",
     vendor: "GE Vernova",
     summary: "Insufficient cryptographic signature verification in GE Vernova Mark VIe turbine controllers enables physical or network-adjacent attackers to upload unauthorized firmware images to power generator controls.",
@@ -108,6 +108,45 @@ const FALLBACK_ADVISORIES: CisaAdvisoryItem[] = [
     cves: ["CVE-2026-45601", "CVE-2026-45602"],
     sectors: ["Energy", "Critical Infrastructure"],
     relatedAptIds: ["APT41", "VOLT_TYPHOON"]
+  },
+  {
+    id: "icsma-26-181-01",
+    advisoryId: "ICSMA-26-181-01",
+    title: "OFFIS DCMTK Medical Imaging Toolkit",
+    link: "https://www.cisa.gov/news-events/ics-medical-advisories/icsma-26-181-01",
+    pubDate: "2026-06-30T12:00:00Z",
+    vendor: "OFFIS",
+    summary: "Out-of-bounds write and memory corruption vulnerabilities in OFFIS DCMTK DICOM toolkit could allow remote attackers to cause a denial-of-service condition or execute arbitrary code in medical imaging PACS servers.",
+    csafUrl: "https://github.com/cisagov/CSAF/blob/develop/csaf_files/OT/white/2026/icsma-26-181-01.json",
+    cves: ["CVE-2026-25411", "CVE-2026-25412"],
+    sectors: ["Healthcare and Public Health"],
+    relatedAptIds: ["APT41", "APT31"]
+  },
+  {
+    id: "icsma-26-176-02",
+    advisoryId: "ICSMA-26-176-02",
+    title: "OHIF Viewers DICOM Medical Imaging Client",
+    link: "https://www.cisa.gov/news-events/ics-medical-advisories/icsma-26-176-02",
+    pubDate: "2026-06-25T12:00:00Z",
+    vendor: "Open Health Imaging Foundation",
+    summary: "Cross-site scripting (XSS) and client-side prototype pollution in OHIF web-based medical viewer allows attackers to inject malicious scripts into radiologist diagnostic web portals.",
+    csafUrl: "https://github.com/cisagov/CSAF/blob/develop/csaf_files/OT/white/2026/icsma-26-176-02.json",
+    cves: ["CVE-2026-24102"],
+    sectors: ["Healthcare and Public Health"],
+    relatedAptIds: ["APT41"]
+  },
+  {
+    id: "icsma-26-176-01",
+    advisoryId: "ICSMA-26-176-01",
+    title: "pydicom pynetdicom Medical Imaging Library",
+    link: "https://www.cisa.gov/news-events/ics-medical-advisories/icsma-26-176-01",
+    pubDate: "2026-06-25T10:00:00Z",
+    vendor: "pydicom",
+    summary: "Improper input handling in pynetdicom network protocol parser allows remote unauthenticated attackers to cause infinite loops and memory exhaustion on medical telemetry ingestion endpoints.",
+    csafUrl: "https://github.com/cisagov/CSAF/blob/develop/csaf_files/OT/white/2026/icsma-26-176-01.json",
+    cves: ["CVE-2026-23901"],
+    sectors: ["Healthcare and Public Health"],
+    relatedAptIds: ["APT41", "APT10"]
   },
   {
     id: "icsa-26-211-04",
@@ -174,6 +213,35 @@ function cleanHtmlEntities(str: string): string {
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function sanitizeCisaLink(rawLink?: string, advisoryId?: string): string {
+  const id = (advisoryId || "").toLowerCase();
+  let link = (rawLink || "").trim();
+
+  // Fix medical advisory URL path if it used /ics-advisories/icsma-...
+  if ((id.startsWith("icsma-") || link.includes("/icsma-")) && link.includes("/news-events/ics-advisories/")) {
+    link = link.replace("/news-events/ics-advisories/", "/news-events/ics-medical-advisories/");
+  }
+
+  if (link && link.startsWith("http://")) {
+    link = link.replace("http://", "https://");
+  }
+
+  if (link && link.startsWith("https://")) {
+    return link;
+  }
+
+  if (id.startsWith("icsma-")) {
+    return `https://www.cisa.gov/news-events/ics-medical-advisories/${id}`;
+  }
+  if (id.startsWith("ics-alert") || id.startsWith("icsa-alert")) {
+    return `https://www.cisa.gov/news-events/ics-alerts/${id}`;
+  }
+  if (id) {
+    return `https://www.cisa.gov/news-events/ics-advisories/${id}`;
+  }
+  return "https://www.cisa.gov/news-events/ics-advisories";
 }
 
 function extractVendor(title: string): string {
@@ -298,11 +366,23 @@ async function fetchCisaCsafFromGitHub(): Promise<CisaAdvisoryItem[]> {
           const isDateValid = !isNaN(parsedDate.getTime());
           const pubDateIso = isDateValid ? parsedDate.toISOString() : new Date().toISOString();
 
+          let webLink = "";
+          if (Array.isArray(doc.references)) {
+            const webRef =
+              doc.references.find(
+                (r: any) =>
+                  r.url &&
+                  r.url.includes("cisa.gov/news-events/") &&
+                  (r.summary?.toLowerCase().includes("web version") || r.category === "self")
+              ) || doc.references.find((r: any) => r.url && r.url.includes("cisa.gov/news-events/"));
+            if (webRef?.url) webLink = webRef.url;
+          }
+
           return {
             id: advisoryId.toLowerCase(),
             advisoryId,
             title,
-            link: `https://www.cisa.gov/news-events/ics-advisories/${advisoryId.toLowerCase()}`,
+            link: sanitizeCisaLink(webLink, advisoryId),
             pubDate: pubDateIso,
             vendor,
             summary: summary.slice(0, 350) + (summary.length > 350 ? "..." : ""),
@@ -340,7 +420,10 @@ function mergeWithFallback(items: CisaAdvisoryItem[]): CisaAdvisoryItem[] {
     if (key) map.set(key, item);
   });
 
-  const compiled = Array.from(map.values());
+  const compiled = Array.from(map.values()).map((item) => ({
+    ...item,
+    link: sanitizeCisaLink(item.link, item.advisoryId),
+  }));
   compiled.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
   return compiled;
 }
@@ -419,7 +502,7 @@ async function fetchCisaFeed(): Promise<CisaAdvisoryItem[]> {
           id: advisoryId.toLowerCase(),
           advisoryId,
           title,
-          link,
+          link: sanitizeCisaLink(link, advisoryId),
           pubDate: pubDateIso,
           vendor,
           summary: cleanedDesc.slice(0, 320) + (cleanedDesc.length > 320 ? "..." : ""),
