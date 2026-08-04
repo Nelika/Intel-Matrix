@@ -213,7 +213,8 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
             )}
           </AnimatePresence>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 bg-slate-100 border border-slate-200 p-1 rounded-lg relative w-full sm:w-auto">
+          {/* View Mode Tabs - Horizontally scrollable on mobile */}
+          <div className="flex overflow-x-auto sm:grid sm:grid-cols-4 lg:flex lg:flex-wrap gap-1 bg-slate-100 border border-slate-200 p-1 rounded-xl relative w-full sm:w-auto scrollbar-none">
             {modes.map((mode) => {
               const Icon = mode.icon;
               const isActive = viewMode === mode.id;
@@ -222,8 +223,8 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
                 <button
                   key={mode.id}
                   onClick={() => onViewModeChange(mode.id)}
-                  className={`relative z-10 flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-mono rounded transition-colors cursor-pointer ${
-                    isActive ? 'text-white font-bold' : 'text-slate-600 hover:text-slate-900'
+                  className={`relative z-10 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-mono rounded-lg transition-colors cursor-pointer shrink-0 min-h-[38px] ${
+                    isActive ? 'text-white font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5 relative z-10 shrink-0" />
@@ -232,7 +233,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
                   {isActive && (
                     <motion.div
                       layoutId="viewModeActiveTab"
-                      className="absolute inset-0 bg-blue-600 rounded shadow-xs"
+                      className="absolute inset-0 bg-blue-600 rounded-lg shadow-xs"
                       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                     />
                   )}

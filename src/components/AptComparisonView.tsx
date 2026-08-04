@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeftRight,
   Shield,
@@ -9,21 +8,13 @@ import {
   Gavel,
   Zap,
   Calendar,
-  FileCode,
   Check,
   X,
   Sparkles,
-  ExternalLink,
   Download,
   Terminal,
-  HelpCircle,
   Activity,
-  Layers,
-  ChevronRight,
-  ArrowRight,
-  Lock,
   Globe,
-  Radio,
 } from 'lucide-react';
 import { AptGroup } from '../types';
 
@@ -34,22 +25,115 @@ interface AptComparisonViewProps {
   initialAptBId?: string;
 }
 
+// MITRE ATT&CK Technique dictionary per group ID or default fallbacks
+const APT_TECHNIQUE_MAPPINGS: Record<string, Array<{ code: string; name: string }>> = {
+  G0006: [ // APT 1
+    { code: 'T1059.003', name: 'Windows Command Shell' },
+    { code: 'T1078', name: 'Valid Accounts' },
+    { code: 'T1003.001', name: 'LSASS Memory Dumping' },
+    { code: 'T1021.001', name: 'Remote Desktop Protocol' },
+    { code: 'T1566.001', name: 'Spearphishing Attachment' },
+    { code: 'T1105', name: 'Ingress Tool Transfer' },
+  ],
+  G0022: [ // APT 3
+    { code: 'T1189', name: 'Drive-by Compromise' },
+    { code: 'T1059.003', name: 'Windows Command Shell' },
+    { code: 'T1078.003', name: 'Local Accounts' },
+    { code: 'T1003.003', name: 'NTDS.dit Credentials' },
+    { code: 'T1071.004', name: 'DNS Tunneling' },
+  ],
+  G0096: [ // APT 41
+    { code: 'T1190', name: 'Exploit Public-Facing Application' },
+    { code: 'T1068', name: 'Privilege Escalation' },
+    { code: 'T1078.002', name: 'Domain Accounts' },
+    { code: 'T1505.003', name: 'Web Shell Persistence' },
+    { code: 'T1003.002', name: 'SAM Credential Dumping' },
+    { code: 'T1020', name: 'Automated Exfiltration' },
+  ],
+  G0045: [ // APT 10
+    { code: 'T1190', name: 'Exploit Public-Facing Application' },
+    { code: 'T1059.001', name: 'PowerShell Execution' },
+    { code: 'T1566.002', name: 'Spearphishing Link' },
+    { code: 'T1071.001', name: 'Web Protocols (HTTP/S)' },
+    { code: 'T1041', name: 'Exfiltration Over C2 Channel' },
+  ],
+  G0027: [ // APT 30
+    { code: 'T1190', name: 'Exploit Public-Facing Application' },
+    { code: 'T1133', name: 'External Remote Services' },
+    { code: 'T1078', name: 'Valid Accounts' },
+    { code: 'T1003.001', name: 'LSASS Memory Dumping' },
+    { code: 'T1021.002', name: 'SMB/Windows Admin Shares' },
+  ],
+  G0031: [ // APT 31
+    { code: 'T1566.002', name: 'Spearphishing Link' },
+    { code: 'T1190', name: 'Exploit Public-Facing Application' },
+    { code: 'T1071.001', name: 'Web Protocols' },
+    { code: 'T1059.001', name: 'PowerShell' },
+  ],
+};
+
+const DEFAULT_TECHNIQUES = [
+  { code: 'T1059.003', name: 'Windows Command Shell' },
+  { code: 'T1078', name: 'Valid Accounts' },
+  { code: 'T1190', name: 'Exploit Public-Facing Application' },
+  { code: 'T1003', name: 'Credential Dumping' },
+  { code: 'T1071.001', name: 'Web Protocols' },
+  { code: 'T1566.001', name: 'Spearphishing Attachment' },
+];
+
+const getAptMitreTechniques = (apt: AptGroup): Array<{ code: string; name: string }> => {
+  if (!apt) return [];
+  return APT_TECHNIQUE_MAPPINGS[apt.id] || DEFAULT_TECHNIQUES;
+};
+
+const getNotableCampaigns = (apt: AptGroup): string[] => {
+  if (!apt) return [];
+  if (apt.spans && apt.spans.length > 0) {
+    return apt.spans.map((s) => `${s.startYear}–${s.endYear}: ${s.label || s.status}`);
+  }
+  return [`${apt.firstObservedYear || '2010'}–${apt.lastObservedYear || 'Present'}: State-sponsored intrusions targeting ${(apt.targetedSectors || []).slice(0, 3).join(', ')}`];
+};
+
+const getAptOverview = (apt: AptGroup): string => {
+  if (!apt) return '';
+  return `${apt.classification} (${apt.id}) is a Chinese state-sponsored threat group associated with ${apt.sponsoringAuthority} (${apt.sponsoringOrgType}). Primary front entity: ${apt.frontCompany}. Active since ${apt.firstObservedYear}, targeting ${(apt.targetedSectors || []).join(', ')}. Legal status: ${apt.legalActions || apt.legalCategory}.`;
+};
+
+const getTopAttackVector = (apt: AptGroup): string => {
+  if (!apt) return '';
+  if (apt.sponsoringOrgType === 'MSS') {
+    return 'Zero-Day Vulnerability Exploitation & Web Shell Deployment';
+  }
+  if (apt.sponsoringOrgType === 'PLA') {
+    return 'Spearphishing Attachments & Custom Malware Droppers';
+  }
+  return 'Edge Device Vulnerability Exploitation & Supply Chain Compromise';
+};
+
 export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
-  data,
+  data = [],
   onSelectApt,
   initialAptAId,
   initialAptBId,
 }) => {
-  // Default selections: APT41 (index 0) and APT27 (index 1) or provided initial IDs
+  const safeData = data || [];
+
+  // Default selections
   const [aptAId, setAptAId] = useState<string>(
-    initialAptAId || (data.length > 0 ? data[0].id : '')
+    initialAptAId || (safeData.length > 0 ? safeData[0].id : '')
   );
   const [aptBId, setAptBId] = useState<string>(
-    initialAptBId || (data.length > 1 ? data[1].id : data[0]?.id || '')
+    initialAptBId || (safeData.length > 1 ? safeData[1].id : safeData[0]?.id || '')
   );
 
-  const aptA = useMemo(() => data.find((a) => a.id === aptAId) || data[0], [data, aptAId]);
-  const aptB = useMemo(() => data.find((a) => a.id === aptBId) || data[1] || data[0], [data, aptBId]);
+  const aptA = useMemo(
+    () => safeData.find((a) => a.id === aptAId) || safeData[0] || null,
+    [safeData, aptAId]
+  );
+  const aptB = useMemo(
+    () => safeData.find((a) => a.id === aptBId) || safeData[1] || safeData[0] || null,
+    [safeData, aptBId]
+  );
 
   // Swap APT A and APT B
   const handleSwap = () => {
@@ -58,15 +142,24 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
     setAptBId(temp);
   };
 
-  // Preset comparison pairs
+  // Presets mapping query strings to find groups
   const presets = [
-    { label: 'MSS vs PLA Flagships (APT41 vs APT27)', idA: 'APT41', idB: 'APT27' },
-    { label: 'Civilian Intel Ops (APT41 vs APT31)', idA: 'APT41', idB: 'APT31' },
-    { label: 'Military Recon (APT1 vs APT30)', idA: 'APT1', idB: 'APT30' },
-    { label: 'i-SOON Front Cover Ops (APT41 vs APT10)', idA: 'APT41', idB: 'APT10' },
+    { label: 'MSS vs PLA Flagships (APT41 vs APT27)', matchA: 'APT 41', matchB: 'APT 27' },
+    { label: 'Civilian Intel Ops (APT41 vs APT31)', matchA: 'APT 41', matchB: 'APT 31' },
+    { label: 'Military Recon (APT1 vs APT30)', matchA: 'APT 1', matchB: 'APT 30' },
+    { label: 'i-SOON Cover Ops (APT41 vs APT10)', matchA: 'APT 41', matchB: 'APT 10' },
   ];
 
-  // Calculate Overlaps
+  const findGroupByQuery = (query: string) => {
+    const clean = query.toLowerCase().replace(/\s+/g, '');
+    return safeData.find(
+      (d) =>
+        d.id.toLowerCase() === clean ||
+        d.classification.toLowerCase().replace(/\s+/g, '').includes(clean)
+    );
+  };
+
+  // Calculate Overlaps safely
   const overlappingSectors = useMemo(() => {
     if (!aptA || !aptB) return [];
     return (aptA.targetedSectors || []).filter((sec) =>
@@ -74,12 +167,13 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
     );
   }, [aptA, aptB]);
 
+  const techA = useMemo(() => (aptA ? getAptMitreTechniques(aptA) : []), [aptA]);
+  const techB = useMemo(() => (aptB ? getAptMitreTechniques(aptB) : []), [aptB]);
+
   const overlappingTechniques = useMemo(() => {
     if (!aptA || !aptB) return [];
-    return (aptA.mitreTechniques || []).filter((tech) =>
-      (aptB.mitreTechniques || []).some((bTech) => bTech.code === tech.code)
-    );
-  }, [aptA, aptB]);
+    return techA.filter((tech) => techB.some((bTech) => bTech.code === tech.code));
+  }, [aptA, aptB, techA, techB]);
 
   const sameSponsorOrg = aptA && aptB && aptA.sponsoringOrgType === aptB.sponsoringOrgType;
 
@@ -111,7 +205,7 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
   if (!aptA || !aptB) {
     return (
       <div className="bg-slate-950 border border-slate-800 p-8 rounded-2xl text-center text-slate-400 font-mono">
-        Insufficient APT data to render side-by-side comparison.
+        Insufficient APT data available to render side-by-side comparison.
       </div>
     );
   }
@@ -163,11 +257,11 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
               Subject Group A:
             </label>
             <select
-              value={aptAId}
+              value={aptA.id}
               onChange={(e) => setAptAId(e.target.value)}
               className="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-lg text-sm font-bold focus:outline-none focus:border-blue-400 cursor-pointer"
             >
-              {data.map((apt) => (
+              {safeData.map((apt) => (
                 <option key={apt.id} value={apt.id}>
                   {apt.classification} ({apt.id}) — {apt.sponsoringOrgType}
                 </option>
@@ -194,11 +288,11 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
               Subject Group B:
             </label>
             <select
-              value={aptBId}
+              value={aptB.id}
               onChange={(e) => setAptBId(e.target.value)}
               className="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-lg text-sm font-bold focus:outline-none focus:border-purple-400 cursor-pointer"
             >
-              {data.map((apt) => (
+              {safeData.map((apt) => (
                 <option key={apt.id} value={apt.id}>
                   {apt.classification} ({apt.id}) — {apt.sponsoringOrgType}
                 </option>
@@ -214,8 +308,8 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
             <button
               key={p.label}
               onClick={() => {
-                const foundA = data.find((d) => d.id === p.idA);
-                const foundB = data.find((d) => d.id === p.idB);
+                const foundA = findGroupByQuery(p.matchA);
+                const foundB = findGroupByQuery(p.matchB);
                 if (foundA) setAptAId(foundA.id);
                 if (foundB) setAptBId(foundB.id);
               }}
@@ -297,7 +391,7 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
       </div>
 
       {/* Side-by-Side Comparative Matrix Table */}
-      <div className="border border-slate-800 rounded-2xl overflow-hidden shadow-2xl bg-slate-950">
+      <div className="border border-slate-800 rounded-2xl overflow-hidden shadow-2xl bg-slate-950 overflow-x-auto">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
             <tr className="bg-slate-900 border-b border-slate-800 text-slate-300">
@@ -344,7 +438,7 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
               </td>
               <td className="p-4 border-r border-slate-800 text-slate-200">
                 <div className="flex flex-wrap gap-1">
-                  {aptA.aliases.map((a) => (
+                  {(aptA.aliases || []).map((a) => (
                     <span key={a} className="px-2 py-0.5 bg-slate-900 border border-slate-700 rounded text-[11px]">
                       {a}
                     </span>
@@ -353,7 +447,7 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
               </td>
               <td className="p-4 text-slate-200">
                 <div className="flex flex-wrap gap-1">
-                  {aptB.aliases.map((a) => (
+                  {(aptB.aliases || []).map((a) => (
                     <span key={a} className="px-2 py-0.5 bg-slate-900 border border-slate-700 rounded text-[11px]">
                       {a}
                     </span>
@@ -403,12 +497,24 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
                 <span>Active Years & Motivation</span>
               </td>
               <td className="p-4 border-r border-slate-800 text-slate-200">
-                <div className="text-white font-bold">{aptA.activeYears}</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">{aptA.primaryMotivation}</div>
+                <div className="text-white font-bold">
+                  {aptA.firstObservedYear} - {aptA.lastObservedYear === 2026 ? 'Present' : aptA.lastObservedYear}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-0.5">
+                  {aptA.sponsoringOrgType === 'MSS'
+                    ? 'Civilian Intelligence & Strategic Commercial Espionage'
+                    : 'Military Intelligence & Regional Reconnaissance'}
+                </div>
               </td>
               <td className="p-4 text-slate-200">
-                <div className="text-white font-bold">{aptB.activeYears}</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">{aptB.primaryMotivation}</div>
+                <div className="text-white font-bold">
+                  {aptB.firstObservedYear} - {aptB.lastObservedYear === 2026 ? 'Present' : aptB.lastObservedYear}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-0.5">
+                  {aptB.sponsoringOrgType === 'MSS'
+                    ? 'Civilian Intelligence & Strategic Commercial Espionage'
+                    : 'Military Intelligence & Regional Reconnaissance'}
+                </div>
               </td>
             </tr>
 
@@ -420,7 +526,7 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
               </td>
               <td className="p-4 border-r border-slate-800 text-slate-200">
                 <div className="flex flex-wrap gap-1.5">
-                  {aptA.targetedSectors.map((sec) => {
+                  {(aptA.targetedSectors || []).map((sec) => {
                     const isShared = overlappingSectors.some((s) => s.toLowerCase() === sec.toLowerCase());
                     return (
                       <span
@@ -439,7 +545,7 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
               </td>
               <td className="p-4 text-slate-200">
                 <div className="flex flex-wrap gap-1.5">
-                  {aptB.targetedSectors.map((sec) => {
+                  {(aptB.targetedSectors || []).map((sec) => {
                     const isShared = overlappingSectors.some((s) => s.toLowerCase() === sec.toLowerCase());
                     return (
                       <span
@@ -467,30 +573,28 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
               <td className="p-4 border-r border-slate-800 text-slate-200">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800 font-bold text-[10px]">
-                    {aptA.legalStatus}
+                    {aptA.legalCategory}
                   </span>
-                  {aptA.legalActionYear && (
-                    <span className="text-[10px] text-slate-400">({aptA.legalActionYear})</span>
+                  {(aptA.legalActionDate || aptA.legalActionYear) && (
+                    <span className="text-[10px] text-slate-400">
+                      ({aptA.legalActionDate || aptA.legalActionYear})
+                    </span>
                   )}
                 </div>
-                <div className="text-[11px] text-slate-300">{aptA.dojIndictment}</div>
-                {aptA.sanctionsBody && (
-                  <div className="text-[10px] text-amber-400 mt-1 font-bold">Sanctions: {aptA.sanctionsBody}</div>
-                )}
+                <div className="text-[11px] text-slate-300">{aptA.legalActions}</div>
               </td>
               <td className="p-4 text-slate-200">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800 font-bold text-[10px]">
-                    {aptB.legalStatus}
+                    {aptB.legalCategory}
                   </span>
-                  {aptB.legalActionYear && (
-                    <span className="text-[10px] text-slate-400">({aptB.legalActionYear})</span>
+                  {(aptB.legalActionDate || aptB.legalActionYear) && (
+                    <span className="text-[10px] text-slate-400">
+                      ({aptB.legalActionDate || aptB.legalActionYear})
+                    </span>
                   )}
                 </div>
-                <div className="text-[11px] text-slate-300">{aptB.dojIndictment}</div>
-                {aptB.sanctionsBody && (
-                  <div className="text-[10px] text-amber-400 mt-1 font-bold">Sanctions: {aptB.sanctionsBody}</div>
-                )}
+                <div className="text-[11px] text-slate-300">{aptB.legalActions}</div>
               </td>
             </tr>
 
@@ -501,10 +605,10 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
                 <span>Top Attack Vector</span>
               </td>
               <td className="p-4 border-r border-slate-800 text-slate-200 font-bold text-amber-300">
-                {aptA.topAttackVector}
+                {getTopAttackVector(aptA)}
               </td>
               <td className="p-4 text-slate-200 font-bold text-amber-300">
-                {aptB.topAttackVector}
+                {getTopAttackVector(aptB)}
               </td>
             </tr>
 
@@ -516,7 +620,7 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
               </td>
               <td className="p-4 border-r border-slate-800 text-slate-200">
                 <div className="space-y-1">
-                  {aptA.mitreTechniques.map((t) => {
+                  {techA.map((t) => {
                     const isShared = overlappingTechniques.some((ot) => ot.code === t.code);
                     return (
                       <div
@@ -538,7 +642,7 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
               </td>
               <td className="p-4 text-slate-200">
                 <div className="space-y-1">
-                  {aptB.mitreTechniques.map((t) => {
+                  {techB.map((t) => {
                     const isShared = overlappingTechniques.some((ot) => ot.code === t.code);
                     return (
                       <div
@@ -568,14 +672,14 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
               </td>
               <td className="p-4 border-r border-slate-800 text-slate-200">
                 <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-300">
-                  {aptA.notableCampaigns.map((c, i) => (
+                  {getNotableCampaigns(aptA).map((c, i) => (
                     <li key={i}>{c}</li>
                   ))}
                 </ul>
               </td>
               <td className="p-4 text-slate-200">
                 <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-300">
-                  {aptB.notableCampaigns.map((c, i) => (
+                  {getNotableCampaigns(aptB).map((c, i) => (
                     <li key={i}>{c}</li>
                   ))}
                 </ul>
@@ -589,10 +693,10 @@ export const AptComparisonView: React.FC<AptComparisonViewProps> = ({
                 <span>Operational Overview</span>
               </td>
               <td className="p-4 border-r border-slate-800 text-slate-300 text-[11px] leading-relaxed">
-                {aptA.overview}
+                {getAptOverview(aptA)}
               </td>
               <td className="p-4 text-slate-300 text-[11px] leading-relaxed">
-                {aptB.overview}
+                {getAptOverview(aptB)}
               </td>
             </tr>
           </tbody>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { APT_GROUPS, ALL_SECTORS, ALL_SPONSORS } from './data/aptData';
 import { AptGroup, FilterState, SortField, SortOrder } from './types';
 import { Header } from './components/Header';
@@ -255,38 +255,52 @@ export default function App() {
     }, 120);
   };
 
-  if (activePage === 'about') {
-    return <AboutUsPage onBack={() => setActivePage('matrix')} />;
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-900">
-      
-      {/* Background Grid Accent */}
-      <div className="fixed inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:32px_32px] opacity-70 pointer-events-none" />
+      <AnimatePresence mode="wait">
+        {activePage === 'about' ? (
+          <motion.div
+            key="about-page"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+          >
+            <AboutUsPage onBack={() => setActivePage('matrix')} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="matrix-page"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* Background Grid Accent */}
+            <div className="fixed inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:32px_32px] opacity-70 pointer-events-none" />
 
-      {/* Main Header */}
-      <Header
-        totalCount={APT_GROUPS.length}
-        filteredCount={filteredData.length}
-        filteredData={filteredData}
-        onOpenMitreModal={() => {
-          setMitreModalGroup(null);
-          setIsMitreModalOpen(true);
-          setViewMode('mitre');
-        }}
-        onOpenBriefingModal={() => handleOpenBriefing()}
-        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-        onOpenShortcutsModal={() => setIsShortcutsModalOpen(true)}
-        onOpenAboutPage={() => setActivePage('about')}
-        onNavigateToSection={handleNavigateToSection}
-        sectionStatus={{
-          cisaFeed: showCisaFeed,
-          threatHeatmap: showThreatHeatmap,
-          sectorIndex: showCharts,
-          networkWidget: showNetworkWidget,
-        }}
-      />
+            {/* Main Header */}
+            <Header
+              totalCount={APT_GROUPS.length}
+              filteredCount={filteredData.length}
+              filteredData={filteredData}
+              onOpenMitreModal={() => {
+                setMitreModalGroup(null);
+                setIsMitreModalOpen(true);
+                setViewMode('mitre');
+              }}
+              onOpenBriefingModal={() => handleOpenBriefing()}
+              onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+              onOpenShortcutsModal={() => setIsShortcutsModalOpen(true)}
+              onOpenAboutPage={() => setActivePage('about')}
+              onNavigateToSection={handleNavigateToSection}
+              sectionStatus={{
+                cisaFeed: showCisaFeed,
+                threatHeatmap: showThreatHeatmap,
+                sectorIndex: showCharts,
+                networkWidget: showNetworkWidget,
+              }}
+            />
 
       {/* Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
@@ -474,62 +488,72 @@ export default function App() {
           filteredData={filteredData}
         />
 
-        {/* Main Data Display */}
-        {viewMode === 'table' ? (
-          <AptTable
-            data={filteredData}
-            sortField={sortField}
-            sortOrder={sortOrder}
-            onSort={handleSort}
-            onSelectApt={(apt) => setSelectedApt(apt)}
-            onOpenBriefingModal={handleOpenBriefing}
-            searchQuery={filters.searchQuery}
-          />
-        ) : viewMode === 'grid' ? (
-          <AptCardGrid
-            data={filteredData}
-            onSelectApt={(apt) => setSelectedApt(apt)}
-            onOpenBriefingModal={handleOpenBriefing}
-            searchQuery={filters.searchQuery}
-          />
-        ) : viewMode === 'compare' ? (
-          <AptComparisonView
-            data={APT_GROUPS}
-            onSelectApt={(apt) => setSelectedApt(apt)}
-          />
-        ) : viewMode === 'timeline' ? (
-          <AptTimeline
-            data={filteredData}
-            onSelectApt={(apt) => setSelectedApt(apt)}
-            searchQuery={filters.searchQuery}
-          />
-        ) : viewMode === 'graph' ? (
-          <AptActivityGraph
-            data={filteredData}
-            onSelectApt={(apt) => setSelectedApt(apt)}
-            searchQuery={filters.searchQuery}
-          />
-        ) : viewMode === 'cisa' ? (
-          <CisaIcsAdvisoriesFeed
-            aptGroups={APT_GROUPS}
-            onSelectApt={(apt) => setSelectedApt(apt)}
-            onFilterBySector={(sector) => {
-              setFilters((prev) => ({ ...prev, selectedSector: sector }));
-              setViewMode('table');
-            }}
-          />
-        ) : viewMode === 'network' ? (
-          <AptNetworkGraph
-            data={filteredData}
-            onSelectApt={(apt) => setSelectedApt(apt)}
-            searchQuery={filters.searchQuery}
-          />
-        ) : (
-          <MitreAttackSection
-            data={filteredData}
-            onSelectApt={(apt) => setSelectedApt(apt)}
-          />
-        )}
+        {/* Main Data Display with Smooth View Transitions */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={viewMode}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+          >
+            {viewMode === 'table' ? (
+              <AptTable
+                data={filteredData}
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+                onSelectApt={(apt) => setSelectedApt(apt)}
+                onOpenBriefingModal={handleOpenBriefing}
+                searchQuery={filters.searchQuery}
+              />
+            ) : viewMode === 'grid' ? (
+              <AptCardGrid
+                data={filteredData}
+                onSelectApt={(apt) => setSelectedApt(apt)}
+                onOpenBriefingModal={handleOpenBriefing}
+                searchQuery={filters.searchQuery}
+              />
+            ) : viewMode === 'compare' ? (
+              <AptComparisonView
+                data={APT_GROUPS}
+                onSelectApt={(apt) => setSelectedApt(apt)}
+              />
+            ) : viewMode === 'timeline' ? (
+              <AptTimeline
+                data={filteredData}
+                onSelectApt={(apt) => setSelectedApt(apt)}
+                searchQuery={filters.searchQuery}
+              />
+            ) : viewMode === 'graph' ? (
+              <AptActivityGraph
+                data={filteredData}
+                onSelectApt={(apt) => setSelectedApt(apt)}
+                searchQuery={filters.searchQuery}
+              />
+            ) : viewMode === 'cisa' ? (
+              <CisaIcsAdvisoriesFeed
+                aptGroups={APT_GROUPS}
+                onSelectApt={(apt) => setSelectedApt(apt)}
+                onFilterBySector={(sector) => {
+                  setFilters((prev) => ({ ...prev, selectedSector: sector }));
+                  setViewMode('table');
+                }}
+              />
+            ) : viewMode === 'network' ? (
+              <AptNetworkGraph
+                data={filteredData}
+                onSelectApt={(apt) => setSelectedApt(apt)}
+                searchQuery={filters.searchQuery}
+              />
+            ) : (
+              <MitreAttackSection
+                data={filteredData}
+                onSelectApt={(apt) => setSelectedApt(apt)}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
 
         {/* Footer info */}
         <footer className="mt-12 pt-6 border-t border-slate-200 text-xs text-slate-500 font-mono flex flex-col md:flex-row items-center justify-between gap-4">
@@ -620,6 +644,10 @@ export default function App() {
             key="vintage-terminal"
             onComplete={() => setIsLoading(false)}
           />
+        )}
+      </AnimatePresence>
+
+          </motion.div>
         )}
       </AnimatePresence>
 

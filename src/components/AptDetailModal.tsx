@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { AptGroup, getMitreUrl } from '../types';
 import { X, ExternalLink, ShieldAlert, Building, Globe, Scale, Copy, Check, FileText, Share2, Terminal, Printer } from 'lucide-react';
 
@@ -37,21 +38,34 @@ export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fade-in" onClick={onClose}>
-      <div
-        className="bg-white border border-slate-200 max-w-2xl w-full p-6 rounded-xl shadow-2xl relative my-8 overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto"
+        onClick={onClose}
       >
-        {/* Header decoration */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600" />
-
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-lg transition-colors"
+        <motion.div
+          initial={{ opacity: 0, scale: 0.94, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.94, y: 12 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className="bg-white border border-slate-200 max-w-2xl w-full p-4 sm:p-6 rounded-2xl shadow-2xl relative my-auto max-h-[90vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
         >
-          <X className="w-5 h-5" />
-        </button>
+          {/* Header decoration */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600" />
+
+          {/* Close Button */}
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-lg transition-colors cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </motion.button>
 
         {/* Title Area */}
         <div className="mb-6 pt-1">
@@ -315,13 +329,14 @@ export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose, on
 
           <button
             onClick={onClose}
-            className="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs font-mono rounded transition-colors shadow-sm"
+            className="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs font-mono rounded transition-colors shadow-sm cursor-pointer"
           >
             Close Dossier
           </button>
         </div>
 
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };

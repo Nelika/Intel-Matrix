@@ -93,22 +93,34 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({ onBack }) => {
 
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto pt-4">
-            <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-xl text-center">
+            <motion.div
+              whileHover={{ scale: 1.05, y: -3 }}
+              className="bg-slate-900/80 border border-slate-800 hover:border-cyan-500/50 p-4 rounded-xl text-center transition-colors cursor-default shadow-xs"
+            >
               <div className="text-2xl font-mono font-bold text-cyan-400">100+</div>
               <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mt-1">APT Profiles</div>
-            </div>
-            <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-xl text-center">
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05, y: -3 }}
+              className="bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 p-4 rounded-xl text-center transition-colors cursor-default shadow-xs"
+            >
               <div className="text-2xl font-mono font-bold text-emerald-400">24/7</div>
               <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mt-1">CISA Feed Sync</div>
-            </div>
-            <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-xl text-center">
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05, y: -3 }}
+              className="bg-slate-900/80 border border-slate-800 hover:border-purple-500/50 p-4 rounded-xl text-center transition-colors cursor-default shadow-xs"
+            >
               <div className="text-2xl font-mono font-bold text-purple-400">15+</div>
               <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mt-1">Sectors Tracked</div>
-            </div>
-            <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-xl text-center">
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05, y: -3 }}
+              className="bg-slate-900/80 border border-slate-800 hover:border-amber-500/50 p-4 rounded-xl text-center transition-colors cursor-default shadow-xs"
+            >
               <div className="text-2xl font-mono font-bold text-amber-400">100%</div>
               <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mt-1">Open Research</div>
-            </div>
+            </motion.div>
           </div>
 
         </div>
@@ -227,7 +239,10 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({ onBack }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             
             {/* Card 1 */}
-            <div className="bg-slate-950 border border-slate-800 hover:border-cyan-500/50 p-5 rounded-xl space-y-3 transition-colors">
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="bg-slate-950 border border-slate-800 hover:border-cyan-500/50 p-5 rounded-xl space-y-3 transition-colors shadow-xs"
+            >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-cyan-950 border border-cyan-800 flex items-center justify-center text-cyan-300 font-mono font-bold">
                   GN
@@ -240,10 +255,13 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({ onBack }) => {
               <p className="text-xs text-slate-300 leading-relaxed">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
               </p>
-            </div>
+            </motion.div>
 
             {/* Card 2 */}
-            <div className="bg-slate-950 border border-slate-800 hover:border-cyan-500/50 p-5 rounded-xl space-y-3 transition-colors">
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="bg-slate-950 border border-slate-800 hover:border-cyan-500/50 p-5 rounded-xl space-y-3 transition-colors shadow-xs"
+            >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-purple-950 border border-purple-800 flex items-center justify-center text-purple-300 font-mono font-bold">
                   AR
@@ -256,10 +274,13 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({ onBack }) => {
               <p className="text-xs text-slate-300 leading-relaxed">
                 Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh.
               </p>
-            </div>
+            </motion.div>
 
             {/* Card 3 */}
-            <div className="bg-slate-950 border border-slate-800 hover:border-cyan-500/50 p-5 rounded-xl space-y-3 transition-colors">
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="bg-slate-950 border border-slate-800 hover:border-cyan-500/50 p-5 rounded-xl space-y-3 transition-colors shadow-xs"
+            >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-emerald-950 border border-emerald-800 flex items-center justify-center text-emerald-300 font-mono font-bold">
                   CI
@@ -272,7 +293,7 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({ onBack }) => {
               <p className="text-xs text-slate-300 leading-relaxed">
                 Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi.
               </p>
-            </div>
+            </motion.div>
 
           </div>
         </section>
