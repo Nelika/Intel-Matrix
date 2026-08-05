@@ -124,15 +124,29 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
         {/* View Mode, Export & Reset Controls */}
         <div className="flex flex-wrap items-center gap-2 shrink-0">
           
+          {/* Direct Export as CSV Button */}
+          <button
+            id="export-as-csv-btn"
+            onClick={() => {
+              exportFilteredDataToCSV(filteredData);
+              triggerNotice(`Downloaded CSV (${filteredData.length} records)`);
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500 text-xs font-mono font-bold rounded-lg transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
+            title="Export currently filtered dataset as CSV for offline reporting"
+          >
+            <Download className="w-3.5 h-3.5 text-white" />
+            <span>Export as CSV</span>
+          </button>
+
           {/* Export Filtered Data Dropdown */}
           <div className="relative">
             <button
               onClick={() => setIsExportOpen((prev) => !prev)}
               className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 border border-slate-700 hover:border-cyan-500/80 text-xs font-mono font-bold rounded-lg transition-all shadow-xs cursor-pointer"
-              title="Export currently filtered dataset"
+              title="Export options for all formats"
             >
-              <Download className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Export ({filteredData.length})</span>
+              <FileText className="w-3.5 h-3.5 text-cyan-400" />
+              <span>All Formats</span>
               <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isExportOpen ? 'rotate-180' : ''}`} />
             </button>
 
