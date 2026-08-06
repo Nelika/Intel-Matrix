@@ -22,11 +22,12 @@ import { CommandPaletteModal } from './components/CommandPaletteModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { CisaIcsAdvisoriesFeed } from './components/CisaIcsAdvisoriesFeed';
 import { AboutUsPage } from './components/AboutUsPage';
-import { ShieldCheck, BarChart2, Eye, EyeOff, Lock, ExternalLink, Share2, Command, Keyboard, ShieldAlert, Flame, Database } from 'lucide-react';
+import { ShieldCheck, BarChart2, Eye, EyeOff, Lock, ExternalLink, Share2, Command, Keyboard, ShieldAlert, Flame, Database, Minimize2, Maximize2 } from 'lucide-react';
 
 export default function App() {
   const [activePage, setActivePage] = useState<'matrix' | 'about'>('matrix');
   const [isLoading, setIsLoading] = useState(true);
+  const [isCompactMode, setIsCompactMode] = useState<boolean>(false);
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: '',
     sponsoringOrgType: '',
@@ -456,9 +457,11 @@ export default function App() {
           )}
         </div>
 
-        {/* Main APT Dataset Widget */}
-        <div id="apt-china-dataset-section" className="mb-4 scroll-mt-28 max-w-full">
-          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 bg-slate-950 border border-cyan-800/80 p-3 sm:p-3.5 rounded-xl text-white shadow-md max-w-full overflow-hidden">
+        {/* Main APT Dataset Widget Wrapper */}
+        <div id="apt-china-dataset-section" className="bg-slate-950 border border-cyan-800/80 rounded-2xl p-3.5 sm:p-5 shadow-2xl max-w-full overflow-hidden space-y-4 mb-8 scroll-mt-28">
+          
+          {/* Widget Header */}
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 bg-slate-900 border border-cyan-800/60 p-3 sm:p-3.5 rounded-xl text-white shadow-inner max-w-full overflow-hidden">
             <div className="flex flex-wrap items-center gap-2 font-mono text-xs font-bold text-cyan-300 min-w-0">
               <span className="p-1.5 rounded-lg bg-cyan-950 border border-cyan-800 text-cyan-400 shrink-0">
                 <Database className="w-4 h-4" />
@@ -468,92 +471,123 @@ export default function App() {
                 {filteredData.length} GROUPS ACTIVE
               </span>
             </div>
-            <div className="text-[11px] font-mono text-slate-400 hidden md:block truncate">
-              Primary Threat Actor Matrix &amp; Intelligence Repository
+
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              {/* Compact Mode Toggle */}
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setIsCompactMode((prev) => !prev)}
+                title={isCompactMode ? 'Switch to Normal Row Padding' : 'Switch to Compact Row Padding'}
+                className={`px-2.5 py-1.5 rounded-lg border font-mono text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  isCompactMode
+                    ? 'bg-cyan-950 border-cyan-500 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
+                    : 'bg-slate-950 border-slate-700 text-slate-300 hover:border-cyan-700 hover:text-white'
+                }`}
+              >
+                {isCompactMode ? (
+                  <Minimize2 className="w-3.5 h-3.5 text-cyan-400" />
+                ) : (
+                  <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
+                )}
+                <span>Compact Mode</span>
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    isCompactMode ? 'bg-cyan-400 animate-pulse' : 'bg-slate-600'
+                  }`}
+                />
+              </motion.button>
+
+              <div className="text-[11px] font-mono text-slate-400 hidden md:block truncate">
+                Primary Threat Actor Matrix &amp; Intelligence Repository
+              </div>
             </div>
           </div>
+
+          {/* Search & Filter Toolbar - Fully Enclosed Inside Widget */}
+          <FilterToolbar
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onResetFilters={handleResetFilters}
+            allSectors={ALL_SECTORS}
+            allSponsors={ALL_SPONSORS}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            activeFilterCount={activeFilterCount}
+            onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+            filteredData={filteredData}
+          />
+
+          {/* Main Data Display with Smooth View Transitions */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={viewMode}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              className="max-w-full overflow-hidden"
+            >
+              {viewMode === 'table' ? (
+                <AptTable
+                  data={filteredData}
+                  sortField={sortField}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                  onSelectApt={(apt) => setSelectedApt(apt)}
+                  onOpenBriefingModal={handleOpenBriefing}
+                  searchQuery={filters.searchQuery}
+                  isCompact={isCompactMode}
+                />
+              ) : viewMode === 'grid' ? (
+                <AptCardGrid
+                  data={filteredData}
+                  onSelectApt={(apt) => setSelectedApt(apt)}
+                  onOpenBriefingModal={handleOpenBriefing}
+                  searchQuery={filters.searchQuery}
+                />
+              ) : viewMode === 'compare' ? (
+                <AptComparisonView
+                  data={APT_GROUPS}
+                  onSelectApt={(apt) => setSelectedApt(apt)}
+                />
+              ) : viewMode === 'timeline' ? (
+                <AptTimeline
+                  data={filteredData}
+                  onSelectApt={(apt) => setSelectedApt(apt)}
+                  searchQuery={filters.searchQuery}
+                />
+              ) : viewMode === 'graph' ? (
+                <AptActivityGraph
+                  data={filteredData}
+                  onSelectApt={(apt) => setSelectedApt(apt)}
+                  searchQuery={filters.searchQuery}
+                />
+              ) : viewMode === 'cisa' ? (
+                <CisaIcsAdvisoriesFeed
+                  aptGroups={APT_GROUPS}
+                  onSelectApt={(apt) => setSelectedApt(apt)}
+                  onFilterBySector={(sector) => {
+                    setFilters((prev) => ({ ...prev, selectedSector: sector }));
+                    setViewMode('table');
+                  }}
+                />
+              ) : viewMode === 'network' ? (
+                <AptNetworkGraph
+                  data={filteredData}
+                  onSelectApt={(apt) => setSelectedApt(apt)}
+                  searchQuery={filters.searchQuery}
+                />
+              ) : (
+                <MitreAttackSection
+                  data={filteredData}
+                  onSelectApt={(apt) => setSelectedApt(apt)}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
+
         </div>
-
-        {/* Search & Filter Toolbar */}
-        <FilterToolbar
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          onResetFilters={handleResetFilters}
-          allSectors={ALL_SECTORS}
-          allSponsors={ALL_SPONSORS}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          activeFilterCount={activeFilterCount}
-          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-          filteredData={filteredData}
-        />
-
-        {/* Main Data Display with Smooth View Transitions */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={viewMode}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-          >
-            {viewMode === 'table' ? (
-              <AptTable
-                data={filteredData}
-                sortField={sortField}
-                sortOrder={sortOrder}
-                onSort={handleSort}
-                onSelectApt={(apt) => setSelectedApt(apt)}
-                onOpenBriefingModal={handleOpenBriefing}
-                searchQuery={filters.searchQuery}
-              />
-            ) : viewMode === 'grid' ? (
-              <AptCardGrid
-                data={filteredData}
-                onSelectApt={(apt) => setSelectedApt(apt)}
-                onOpenBriefingModal={handleOpenBriefing}
-                searchQuery={filters.searchQuery}
-              />
-            ) : viewMode === 'compare' ? (
-              <AptComparisonView
-                data={APT_GROUPS}
-                onSelectApt={(apt) => setSelectedApt(apt)}
-              />
-            ) : viewMode === 'timeline' ? (
-              <AptTimeline
-                data={filteredData}
-                onSelectApt={(apt) => setSelectedApt(apt)}
-                searchQuery={filters.searchQuery}
-              />
-            ) : viewMode === 'graph' ? (
-              <AptActivityGraph
-                data={filteredData}
-                onSelectApt={(apt) => setSelectedApt(apt)}
-                searchQuery={filters.searchQuery}
-              />
-            ) : viewMode === 'cisa' ? (
-              <CisaIcsAdvisoriesFeed
-                aptGroups={APT_GROUPS}
-                onSelectApt={(apt) => setSelectedApt(apt)}
-                onFilterBySector={(sector) => {
-                  setFilters((prev) => ({ ...prev, selectedSector: sector }));
-                  setViewMode('table');
-                }}
-              />
-            ) : viewMode === 'network' ? (
-              <AptNetworkGraph
-                data={filteredData}
-                onSelectApt={(apt) => setSelectedApt(apt)}
-                searchQuery={filters.searchQuery}
-              />
-            ) : (
-              <MitreAttackSection
-                data={filteredData}
-                onSelectApt={(apt) => setSelectedApt(apt)}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
 
         {/* Footer info */}
         <footer className="mt-12 pt-6 border-t border-slate-200 text-xs text-slate-500 font-mono flex flex-col md:flex-row items-center justify-between gap-4">

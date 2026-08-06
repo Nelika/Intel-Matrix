@@ -74,7 +74,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="bg-white border border-slate-200 p-3 sm:p-4 mb-6 shadow-xs rounded-xl space-y-4 max-w-full overflow-hidden"
+      className="bg-slate-900/90 border border-slate-800/90 p-3.5 sm:p-4 rounded-xl shadow-inner space-y-4 max-w-full overflow-hidden"
     >
       
       {/* Top Search & Layout Controls */}
@@ -89,7 +89,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
             value={filters.searchQuery}
             onChange={(e) => onFilterChange({ searchQuery: e.target.value })}
             placeholder="Search APT name, MITRE ID (e.g. G0006), aliases, front company, sector..."
-            className="w-full pl-10 pr-16 py-2 bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:bg-white font-mono rounded-lg transition-all"
+            className="w-full pl-10 pr-16 py-2 bg-slate-950 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 font-mono rounded-lg transition-all"
           />
           <AnimatePresence>
             {filters.searchQuery ? (
@@ -100,7 +100,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
                 whileHover={{ scale: 1.15 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => onFilterChange({ searchQuery: '' })}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 rounded-full cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-100 p-1 rounded-full cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </motion.button>
@@ -109,7 +109,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
                 <button
                   onClick={onOpenCommandPalette}
                   title="Open Command Palette (Ctrl+K)"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[10px] font-mono text-slate-400 bg-slate-200/80 hover:bg-slate-300 hover:text-slate-700 px-1.5 py-0.5 rounded border border-slate-300 transition-colors cursor-pointer"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[10px] font-mono text-slate-400 bg-slate-800 hover:bg-slate-700 hover:text-slate-200 px-1.5 py-0.5 rounded border border-slate-700 transition-colors cursor-pointer"
                 >
                   <kbd className="font-sans">⌘</kbd>
                   <span>K</span>
@@ -140,7 +140,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           <div className="relative">
             <button
               onClick={() => setIsExportOpen((prev) => !prev)}
-              className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 border border-slate-700 hover:border-cyan-500/80 text-xs font-mono font-bold rounded-lg transition-all shadow-xs cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-950 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 border border-slate-700 hover:border-cyan-500/80 text-xs font-mono font-bold rounded-lg transition-all shadow-xs cursor-pointer"
               title="Export options for all formats"
             >
               <FileText className="w-3.5 h-3.5 text-cyan-400" />
@@ -156,7 +156,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 6, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-1.5 w-56 bg-slate-900 border border-cyan-800/80 rounded-xl shadow-2xl p-1.5 z-50 text-xs font-mono space-y-1"
+                  className="absolute right-0 top-full mt-1.5 w-56 bg-slate-950 border border-cyan-800/80 rounded-xl shadow-2xl p-1.5 z-50 text-xs font-mono space-y-1"
                 >
                   <div className="px-2.5 py-1 text-[10px] text-slate-400 uppercase font-bold border-b border-slate-800">
                     Export Filtered Records ({filteredData.length})
@@ -167,13 +167,13 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
                       exportFilteredDataToCSV(filteredData);
                       triggerNotice(`Downloaded CSV (${filteredData.length} records)`);
                     }}
-                    className="w-full flex items-center justify-between px-2.5 py-2 text-slate-200 hover:text-cyan-200 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer text-left"
+                    className="w-full flex items-center justify-between px-2.5 py-2 text-slate-200 hover:text-cyan-200 hover:bg-slate-900 rounded-lg transition-colors cursor-pointer text-left"
                   >
                     <span className="flex items-center gap-2">
                       <Download className="w-3.5 h-3.5 text-cyan-400" />
                       <span>Export to CSV</span>
                     </span>
-                    <span className="text-[10px] text-slate-500 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">.csv</span>
+                    <span className="text-[10px] text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">.csv</span>
                   </button>
 
                   <button
@@ -181,13 +181,13 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
                       exportFilteredDataToJSON(filteredData, filters);
                       triggerNotice(`Downloaded JSON (${filteredData.length} records)`);
                     }}
-                    className="w-full flex items-center justify-between px-2.5 py-2 text-slate-200 hover:text-cyan-200 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer text-left"
+                    className="w-full flex items-center justify-between px-2.5 py-2 text-slate-200 hover:text-cyan-200 hover:bg-slate-900 rounded-lg transition-colors cursor-pointer text-left"
                   >
                     <span className="flex items-center gap-2">
                       <FileCode className="w-3.5 h-3.5 text-cyan-400" />
                       <span>Export to JSON</span>
                     </span>
-                    <span className="text-[10px] text-slate-500 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">.json</span>
+                    <span className="text-[10px] text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">.json</span>
                   </button>
 
                   <button
@@ -195,13 +195,13 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
                       exportFilteredDataToMarkdown(filteredData, filters);
                       triggerNotice(`Downloaded Markdown Report (${filteredData.length} records)`);
                     }}
-                    className="w-full flex items-center justify-between px-2.5 py-2 text-slate-200 hover:text-cyan-200 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer text-left"
+                    className="w-full flex items-center justify-between px-2.5 py-2 text-slate-200 hover:text-cyan-200 hover:bg-slate-900 rounded-lg transition-colors cursor-pointer text-left"
                   >
                     <span className="flex items-center gap-2">
                       <FileText className="w-3.5 h-3.5 text-purple-400" />
                       <span>Export Markdown Report</span>
                     </span>
-                    <span className="text-[10px] text-slate-500 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">.md</span>
+                    <span className="text-[10px] text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">.md</span>
                   </button>
                 </motion.div>
               )}
@@ -217,16 +217,16 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={onResetFilters}
-                className="flex items-center gap-1.5 px-3 py-2 bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-mono rounded-lg transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-2 bg-rose-950/80 border border-rose-800 text-rose-300 hover:bg-rose-900 text-xs font-mono rounded-lg transition-colors cursor-pointer"
               >
-                <RefreshCw className="w-3.5 h-3.5 animate-spin-reverse" />
+                <RefreshCw className="w-3.5 h-3.5 animate-spin-reverse text-rose-400" />
                 <span>Reset Filters ({activeFilterCount})</span>
               </motion.button>
             )}
           </AnimatePresence>
 
-          {/* View Mode Tabs - Flex wrapped & scroll-safe */}
-          <div className="flex flex-wrap items-center gap-1 bg-slate-100 border border-slate-200 p-1 rounded-xl relative max-w-full overflow-hidden">
+          {/* View Mode Tabs - 2 rows of 3 buttons */}
+          <div className="grid grid-cols-3 gap-1 bg-slate-950 border border-slate-800 p-1 rounded-xl relative w-full sm:w-auto min-w-[300px]">
             {modes.map((mode) => {
               const Icon = mode.icon;
               const isActive = viewMode === mode.id;
@@ -235,17 +235,17 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
                 <button
                   key={mode.id}
                   onClick={() => onViewModeChange(mode.id)}
-                  className={`relative z-10 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-mono rounded-lg transition-colors cursor-pointer shrink-0 min-h-[38px] ${
-                    isActive ? 'text-white font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                  className={`relative z-10 flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-mono rounded-lg transition-colors cursor-pointer w-full min-h-[34px] ${
+                    isActive ? 'text-slate-950 font-extrabold' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5 relative z-10 shrink-0" />
-                  <span className="relative z-10 text-[11px] font-medium tracking-tight whitespace-nowrap">{mode.label}</span>
+                  <span className="relative z-10 text-[11px] font-semibold tracking-tight whitespace-nowrap">{mode.label}</span>
 
                   {isActive && (
                     <motion.div
                       layoutId="viewModeActiveTab"
-                      className="absolute inset-0 bg-blue-600 rounded-lg shadow-xs"
+                      className="absolute inset-0 bg-cyan-400 rounded-lg shadow-sm"
                       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                     />
                   )}
@@ -259,7 +259,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
       </div>
 
       {/* Filter Dropdowns */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-200">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-800">
         
         {/* Sponsoring Authority Selector */}
         <div className="flex items-center gap-2">
@@ -267,7 +267,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           <select
             value={filters.sponsoringOrgType}
             onChange={(e) => onFilterChange({ sponsoringOrgType: e.target.value })}
-            className="w-full bg-slate-50 border border-slate-200 py-1.5 px-3 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500 rounded-lg cursor-pointer transition-colors hover:border-slate-300"
+            className="w-full bg-slate-950 border border-slate-800 py-1.5 px-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-cyan-500 rounded-lg cursor-pointer transition-colors hover:border-slate-700"
           >
             <option value="">All State Authorities</option>
             {allSponsors.map((sponsor) => (
@@ -283,7 +283,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           <select
             value={filters.selectedSector}
             onChange={(e) => onFilterChange({ selectedSector: e.target.value })}
-            className="w-full bg-slate-50 border border-slate-200 py-1.5 px-3 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500 rounded-lg cursor-pointer transition-colors hover:border-slate-300"
+            className="w-full bg-slate-950 border border-slate-800 py-1.5 px-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-cyan-500 rounded-lg cursor-pointer transition-colors hover:border-slate-700"
           >
             <option value="">All Targeted Sectors</option>
             {allSectors.map((sector) => (
@@ -299,7 +299,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           <select
             value={filters.legalCategory}
             onChange={(e) => onFilterChange({ legalCategory: e.target.value })}
-            className="w-full bg-slate-50 border border-slate-200 py-1.5 px-3 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500 rounded-lg cursor-pointer transition-colors hover:border-slate-300"
+            className="w-full bg-slate-950 border border-slate-800 py-1.5 px-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-cyan-500 rounded-lg cursor-pointer transition-colors hover:border-slate-700"
           >
             <option value="">All Enforcement Actions</option>
             <option value="Indictment">DOJ Indictments</option>

@@ -11,6 +11,7 @@ interface AptTableProps {
   onSelectApt: (apt: AptGroup) => void;
   onOpenBriefingModal?: (apt: AptGroup) => void;
   searchQuery: string;
+  isCompact?: boolean;
 }
 
 export const AptTable: React.FC<AptTableProps> = ({
@@ -21,6 +22,7 @@ export const AptTable: React.FC<AptTableProps> = ({
   onSelectApt,
   onOpenBriefingModal,
   searchQuery,
+  isCompact = false,
 }) => {
   const renderSortIcon = (field: SortField) => {
     if (sortField !== field) {
@@ -48,6 +50,18 @@ export const AptTable: React.FC<AptTableProps> = ({
       )
     );
   };
+
+  const thClass = isCompact
+    ? 'py-2 px-2.5 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[100px]'
+    : 'py-3 px-3 sm:py-3.5 sm:px-4 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[110px]';
+
+  const thStaticClass = isCompact
+    ? 'py-2 px-2.5 font-bold whitespace-nowrap'
+    : 'py-3 px-3 sm:py-3.5 sm:px-4 font-bold whitespace-nowrap';
+
+  const tdClass = isCompact
+    ? 'py-1.5 px-2.5 text-xs'
+    : 'py-3.5 px-4 text-xs';
 
   if (data.length === 0) {
     return (
@@ -80,7 +94,7 @@ export const AptTable: React.FC<AptTableProps> = ({
               {/* MITRE Attack ID */}
               <th
                 onClick={() => onSort('id')}
-                className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[110px]"
+                className={thClass}
               >
                 <div className="flex items-center gap-1.5">
                   <span>MITRE ID</span>
@@ -91,7 +105,7 @@ export const AptTable: React.FC<AptTableProps> = ({
               {/* APT / Classification */}
               <th
                 onClick={() => onSort('classification')}
-                className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[110px]"
+                className={thClass}
               >
                 <div className="flex items-center gap-1.5">
                   <span>APT Group</span>
@@ -100,29 +114,29 @@ export const AptTable: React.FC<AptTableProps> = ({
               </th>
 
               {/* Status & Lifecycle Window */}
-              <th className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold whitespace-nowrap min-w-[120px]">
+              <th className={`${thStaticClass} min-w-[120px]`}>
                 Activity Status
               </th>
 
               {/* Microsoft Taxonomy */}
-              <th className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold whitespace-nowrap min-w-[150px]">
+              <th className={`${thStaticClass} min-w-[140px]`}>
                 Microsoft Taxonomy
               </th>
 
               {/* Kaspersky / Securelist Tracking */}
-              <th className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold whitespace-nowrap min-w-[150px]">
+              <th className={`${thStaticClass} min-w-[140px]`}>
                 Kaspersky Tracking
               </th>
 
               {/* Major Aliases / Associated Groups */}
-              <th className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold whitespace-nowrap min-w-[160px]">
+              <th className={`${thStaticClass} min-w-[150px]`}>
                 Major Aliases
               </th>
 
               {/* Sponsoring State Authority */}
               <th
                 onClick={() => onSort('sponsoringAuthority')}
-                className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[160px]"
+                className={`${thClass} min-w-[150px]`}
               >
                 <div className="flex items-center gap-1.5">
                   <span>State Sponsor</span>
@@ -133,7 +147,7 @@ export const AptTable: React.FC<AptTableProps> = ({
               {/* Front Company / Contractor Entity */}
               <th
                 onClick={() => onSort('frontCompany')}
-                className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[160px]"
+                className={`${thClass} min-w-[150px]`}
               >
                 <div className="flex items-center gap-1.5">
                   <span>Front Company</span>
@@ -142,17 +156,17 @@ export const AptTable: React.FC<AptTableProps> = ({
               </th>
 
               {/* Primary Targeted Sectors */}
-              <th className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold whitespace-nowrap min-w-[180px]">
+              <th className={`${thStaticClass} min-w-[170px]`}>
                 Targeted Sectors
               </th>
 
               {/* Legal and Regulatory Actions */}
-              <th className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold whitespace-nowrap min-w-[180px]">
+              <th className={`${thStaticClass} min-w-[170px]`}>
                 Legal Actions
               </th>
 
               {/* Details Action */}
-              <th className="py-3 px-2 sm:py-3.5 sm:px-3 text-center whitespace-nowrap w-[60px]">
+              <th className={`${isCompact ? 'py-2 px-1.5' : 'py-3 px-2 sm:py-3.5 sm:px-3'} text-center whitespace-nowrap w-[60px]`}>
                 Inspect
               </th>
 
@@ -172,17 +186,22 @@ export const AptTable: React.FC<AptTableProps> = ({
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6, transition: { duration: 0.15 } }}
+                    whileHover={{
+                      backgroundColor: 'rgba(239, 246, 255, 0.95)',
+                      x: 3,
+                      transition: { duration: 0.15, ease: 'easeOut' },
+                    }}
                     transition={{
                       layout: { type: 'spring', stiffness: 350, damping: 30 },
                       opacity: { duration: 0.2 },
                       y: { duration: 0.15 },
                     }}
                     onClick={() => onSelectApt(apt)}
-                    className="hover:bg-blue-50/70 transition-colors cursor-pointer group"
+                    className="hover:bg-blue-50/90 transition-all cursor-pointer group border-l-2 border-l-transparent hover:border-l-blue-600 hover:shadow-xs relative z-0 hover:z-10"
                   >
                     
                     {/* MITRE ID */}
-                    <td className="py-3.5 px-4 font-mono font-medium text-slate-800 whitespace-nowrap">
+                    <td className={`${tdClass} font-mono font-medium text-slate-800 whitespace-nowrap`}>
                       <div className="flex items-center gap-2">
                         <a
                           href={getMitreUrl(apt)}
@@ -190,7 +209,7 @@ export const AptTable: React.FC<AptTableProps> = ({
                           rel="noreferrer"
                           onClick={(e) => e.stopPropagation()}
                           title={`View ${apt.id} on MITRE ATT&CK website`}
-                          className="px-2 py-1 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-400 flex items-center gap-1.5 transition-all text-xs font-semibold rounded"
+                          className={`${isCompact ? 'px-1.5 py-0.5 text-[11px]' : 'px-2 py-1 text-xs'} bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-400 flex items-center gap-1.5 transition-all font-semibold rounded`}
                         >
                           <span>{highlightMatch(apt.id)}</span>
                           <ExternalLink className="w-3 h-3 opacity-70 group-hover:opacity-100" />
@@ -199,16 +218,16 @@ export const AptTable: React.FC<AptTableProps> = ({
                     </td>
 
                     {/* APT Classification */}
-                    <td className="py-3.5 px-4 font-serif font-bold text-slate-900 text-sm whitespace-nowrap">
-                      <span className="px-2.5 py-0.5 bg-rose-50 border border-rose-200 text-rose-700 inline-block font-sans text-xs font-semibold rounded">
+                    <td className={`${tdClass} font-serif font-bold text-slate-900 whitespace-nowrap`}>
+                      <span className={`${isCompact ? 'px-2 py-0 text-[11px]' : 'px-2.5 py-0.5 text-xs'} bg-rose-50 border border-rose-200 text-rose-700 inline-block font-sans font-semibold rounded`}>
                         {highlightMatch(apt.classification)}
                       </span>
                     </td>
 
                     {/* Status & Lifecycle Window */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
+                    <td className={`${tdClass} whitespace-nowrap`}>
                       <span
-                        className={`px-2.5 py-0.5 text-[11px] font-mono font-bold rounded-full inline-flex items-center gap-1.5 ${
+                        className={`${isCompact ? 'px-2 py-0 text-[10px]' : 'px-2.5 py-0.5 text-[11px]'} font-mono font-bold rounded-full inline-flex items-center gap-1.5 ${
                           apt.currentStatus === 'Active'
                             ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                             : apt.currentStatus === 'Intermittent'
@@ -233,26 +252,26 @@ export const AptTable: React.FC<AptTableProps> = ({
                     </td>
 
                     {/* Microsoft Taxonomy */}
-                    <td className="py-3.5 px-4 text-slate-700 font-mono text-[11px] max-w-xs">
+                    <td className={`${tdClass} text-slate-700 font-mono text-[11px] max-w-xs`}>
                       <span className="px-2 py-0.5 bg-cyan-50 border border-cyan-200 text-cyan-800 rounded font-medium inline-block">
                         {highlightMatch(apt.microsoftTaxonomy)}
                       </span>
                     </td>
 
                     {/* Kaspersky / Securelist Tracking */}
-                    <td className="py-3.5 px-4 text-slate-700 font-mono text-[11px] max-w-xs">
+                    <td className={`${tdClass} text-slate-700 font-mono text-[11px] max-w-xs`}>
                       <span className="px-2 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded font-medium inline-block">
                         {highlightMatch(apt.kasperskySecurelist)}
                       </span>
                     </td>
 
                     {/* Aliases */}
-                    <td className="py-3.5 px-4 text-slate-700 max-w-xs">
+                    <td className={`${tdClass} text-slate-700 max-w-xs`}>
                       <div className="flex flex-wrap gap-1">
                         {apt.aliases.map((alias, idx) => (
                           <span
                             key={idx}
-                            className="px-2 py-0.5 bg-slate-100 border border-slate-200 text-slate-600 text-[11px] font-mono rounded"
+                            className={`px-1.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-600 ${isCompact ? 'text-[10px]' : 'text-[11px]'} font-mono rounded`}
                           >
                             {highlightMatch(alias)}
                           </span>
@@ -261,8 +280,8 @@ export const AptTable: React.FC<AptTableProps> = ({
                     </td>
 
                     {/* Sponsoring State Authority */}
-                    <td className="py-3.5 px-4 text-slate-800 font-medium max-w-xs">
-                      <div className="space-y-1">
+                    <td className={`${tdClass} text-slate-800 font-medium max-w-xs`}>
+                      <div className="space-y-0.5">
                         <div className="flex items-center gap-1.5">
                           <span
                             className={`w-2 h-2 rounded-full shrink-0 ${
@@ -273,7 +292,7 @@ export const AptTable: React.FC<AptTableProps> = ({
                                 : 'bg-slate-400'
                             }`}
                           />
-                          <span className="text-slate-900 font-mono text-[12px] font-semibold">
+                          <span className="text-slate-900 font-mono text-[11px] sm:text-[12px] font-semibold">
                             {highlightMatch(apt.sponsoringAuthority)}
                           </span>
                         </div>
@@ -284,22 +303,22 @@ export const AptTable: React.FC<AptTableProps> = ({
                     </td>
 
                     {/* Front Company / Contractor Entity */}
-                    <td className="py-3.5 px-4 text-slate-700 max-w-xs font-mono text-[11px]">
-                      <div className="bg-slate-50 p-2 border border-slate-200 text-slate-700 rounded">
+                    <td className={`${tdClass} text-slate-700 max-w-xs font-mono text-[11px]`}>
+                      <div className={`bg-slate-50 ${isCompact ? 'p-1' : 'p-2'} border border-slate-200 text-slate-700 rounded`}>
                         {highlightMatch(apt.frontCompany)}
                       </div>
                     </td>
 
                     {/* Primary Targeted Sectors */}
-                    <td className="py-3.5 px-4 text-slate-800 max-w-xs">
-                      <div className="text-slate-700 font-sans text-xs leading-relaxed mb-1.5">
+                    <td className={`${tdClass} text-slate-800 max-w-xs`}>
+                      <div className={`text-slate-700 font-sans ${isCompact ? 'text-[11px] mb-1' : 'text-xs mb-1.5'} leading-tight`}>
                         {highlightMatch(apt.rawTargetedSectors)}
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {apt.targetedSectors.map((sector, i) => (
                           <span
                             key={i}
-                            className="text-[10px] font-mono px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded"
+                            className="text-[10px] font-mono px-1.5 py-0.2 bg-blue-50 text-blue-700 border border-blue-200 rounded"
                           >
                             {sector}
                           </span>
@@ -308,20 +327,20 @@ export const AptTable: React.FC<AptTableProps> = ({
                     </td>
 
                     {/* Legal and Regulatory Actions */}
-                    <td className="py-3.5 px-4 text-slate-800 max-w-xs">
+                    <td className={`${tdClass} text-slate-800 max-w-xs`}>
                       <div className="flex items-start gap-1.5">
-                        <span className="text-[10px] font-mono px-2 py-0.5 font-semibold uppercase tracking-wider shrink-0 mt-0.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded">
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 font-semibold uppercase tracking-wider shrink-0 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded">
                           {apt.legalCategory}
                         </span>
                       </div>
-                      <div className="text-slate-600 text-xs mt-1 leading-relaxed">
+                      <div className={`text-slate-600 ${isCompact ? 'text-[11px] mt-0.5' : 'text-xs mt-1'} leading-tight`}>
                         {highlightMatch(apt.legalActions)}
                       </div>
                     </td>
 
                     {/* Action */}
-                    <td className="py-3.5 px-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
+                    <td className={`${isCompact ? 'py-1.5 px-2' : 'py-3.5 px-3'} text-center`}>
+                      <div className="flex items-center justify-center gap-1">
                         {onOpenBriefingModal && (
                           <motion.button
                             whileHover={{ scale: 1.15 }}
@@ -331,9 +350,9 @@ export const AptTable: React.FC<AptTableProps> = ({
                               onOpenBriefingModal(apt);
                             }}
                             title="Generate Briefing PDF"
-                            className="p-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 rounded transition-all cursor-pointer"
+                            className={`${isCompact ? 'p-1' : 'p-1.5'} bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 rounded transition-all cursor-pointer`}
                           >
-                            <Printer className="w-4 h-4" />
+                            <Printer className="w-3.5 h-3.5" />
                           </motion.button>
                         )}
                         <motion.button
@@ -344,9 +363,9 @@ export const AptTable: React.FC<AptTableProps> = ({
                             onSelectApt(apt);
                           }}
                           title="Inspect full intel dossier"
-                          className="p-1.5 bg-slate-100 border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 rounded transition-all cursor-pointer"
+                          className={`${isCompact ? 'p-1' : 'p-1.5'} bg-slate-100 border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 rounded transition-all cursor-pointer`}
                         >
-                          <Info className="w-4 h-4" />
+                          <Info className="w-3.5 h-3.5" />
                         </motion.button>
                       </div>
                     </td>
