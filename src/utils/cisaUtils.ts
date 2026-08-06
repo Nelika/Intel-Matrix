@@ -45,6 +45,46 @@ function normalizeAptTag(str: string): string {
   return str.toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
+export interface EffectiveAptStatus {
+  status: 'Active' | 'Dormant' | 'Intermittent';
+  isUpgradedByCisa: boolean;
+  cisaAdvisoriesCount: number;
+  statusLabel: string;
+  lastObservedYear: number;
+  advisories: CisaAdvisory[];
+}
+
+/**
+ * Calculates the effective operational status for an APT group,
+ * dynamically upgrading its status to 'Active' and updating lastObservedYear to 2026
+ * if associated with active CISA ICS advisories.
+ */
+export function getEffectiveAptStatus(apt: AptGroup, advisories?: CisaAdvisory[]): EffectiveAptStatus {
+  const cisaList = getAdvisoriesForApt(apt, advisories);
+  const count = cisaList.length;
+
+  if (count > 0) {
+    const wasNotActive = apt.currentStatus !== 'Active';
+    return {
+      status: 'Active',
+      isUpgradedByCisa: wasNotActive,
+      cisaAdvisoriesCount: count,
+      statusLabel: wasNotActive ? 'Active (CISA Upgraded)' : 'Active (CISA Verified)',
+      lastObservedYear: Math.max(apt.lastObservedYear || 0, 2026),
+      advisories: cisaList,
+    };
+  }
+
+  return {
+    status: apt.currentStatus,
+    isUpgradedByCisa: false,
+    cisaAdvisoriesCount: 0,
+    statusLabel: apt.currentStatus,
+    lastObservedYear: apt.lastObservedYear,
+    advisories: [],
+  };
+}
+
 /**
  * Returns all active CISA ICS advisories associated with a specific APT group.
  */

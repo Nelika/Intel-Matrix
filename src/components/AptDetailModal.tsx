@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AptGroup, getMitreUrl } from '../types';
 import { X, ExternalLink, ShieldAlert, Building, Globe, Scale, Copy, Check, FileText, Share2, Terminal, Printer, Radio, Flame } from 'lucide-react';
-import { getAccumulatedCisaAdvisories, getAdvisoriesForApt } from '../utils/cisaUtils';
+import { getAccumulatedCisaAdvisories, getAdvisoriesForApt, getEffectiveAptStatus } from '../utils/cisaUtils';
 
 interface AptDetailModalProps {
   apt: AptGroup | null;
@@ -18,6 +18,11 @@ export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose, on
     if (!apt) return [];
     return getAdvisoriesForApt(apt);
   }, [apt]);
+
+  const effectiveStatus = useMemo(() => {
+    if (!apt) return null;
+    return getEffectiveAptStatus(apt, cisaAdvisories);
+  }, [apt, cisaAdvisories]);
 
   if (!apt) return null;
 
@@ -171,27 +176,29 @@ export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose, on
                 <span className="text-[10px] uppercase font-bold text-slate-400">Current Status:</span>
                 <span
                   className={`px-2.5 py-0.5 rounded-full text-xs font-bold flex items-center gap-1.5 ${
-                    apt.currentStatus === 'Active'
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                      : apt.currentStatus === 'Intermittent'
+                    effectiveStatus?.status === 'Active'
+                      ? effectiveStatus.isUpgradedByCisa
+                        ? 'bg-red-500/20 text-red-300 border border-red-500/50'
+                        : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                      : effectiveStatus?.status === 'Intermittent'
                       ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                       : 'bg-slate-800 text-slate-300 border border-slate-700'
                   }`}
                 >
                   <span
                     className={`w-2 h-2 rounded-full ${
-                      apt.currentStatus === 'Active'
+                      effectiveStatus?.status === 'Active'
                         ? 'bg-emerald-400 animate-pulse'
-                        : apt.currentStatus === 'Intermittent'
+                        : effectiveStatus?.status === 'Intermittent'
                         ? 'bg-amber-400'
                         : 'bg-slate-500'
                     }`}
                   />
-                  <span>{apt.currentStatus}</span>
+                  <span>{effectiveStatus?.statusLabel || apt.currentStatus}</span>
                 </span>
               </div>
               <div className="text-xs text-slate-400">
-                Observed: <strong className="text-white">{apt.firstObservedYear} – {apt.lastObservedYear}</strong>
+                Observed: <strong className="text-white">{apt.firstObservedYear} – {effectiveStatus?.lastObservedYear || apt.lastObservedYear}</strong>
               </div>
             </div>
 

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AptGroup, SortField, SortOrder, getMitreUrl } from '../types';
 import { ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Shield, Copy, Check, Info, Printer, ShieldAlert, Flame, AlertTriangle } from 'lucide-react';
-import { getAccumulatedCisaAdvisories, getAdvisoriesForApt } from '../utils/cisaUtils';
+import { getAccumulatedCisaAdvisories, getAdvisoriesForApt, getEffectiveAptStatus } from '../utils/cisaUtils';
 
 interface AptTableProps {
   data: AptGroup[];
@@ -189,6 +189,7 @@ export const AptTable: React.FC<AptTableProps> = ({
                 const isPla = apt.sponsoringOrgType === 'PLA';
                 const isMss = apt.sponsoringOrgType === 'MSS';
                 const cisaAdvisories = cisaAdvisoriesMap.get(apt.id) || [];
+                const effectiveStatus = getEffectiveAptStatus(apt, cisaAdvisories);
                 const isHighPriority = cisaAdvisories.length > 0;
 
                 return (
@@ -261,26 +262,28 @@ export const AptTable: React.FC<AptTableProps> = ({
                       <div className="flex flex-col items-start gap-0.5">
                         <span
                           className={`${isCompact ? 'px-2 py-0 text-[10px]' : 'px-2.5 py-0.5 text-[11px]'} font-mono font-bold rounded-full inline-flex items-center gap-1.5 ${
-                            apt.currentStatus === 'Active'
-                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                              : apt.currentStatus === 'Intermittent'
+                            effectiveStatus.status === 'Active'
+                              ? effectiveStatus.isUpgradedByCisa
+                                ? 'bg-gradient-to-r from-red-100 to-emerald-100 text-red-900 border border-red-300'
+                                : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : effectiveStatus.status === 'Intermittent'
                               ? 'bg-amber-100 text-amber-900 border border-amber-300'
                               : 'bg-slate-100 text-slate-600 border border-slate-200'
                           }`}
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
-                              apt.currentStatus === 'Active'
+                              effectiveStatus.status === 'Active'
                                 ? 'bg-emerald-500 animate-ping'
-                                : apt.currentStatus === 'Intermittent'
+                                : effectiveStatus.status === 'Intermittent'
                                 ? 'bg-amber-500'
                                 : 'bg-slate-400'
                             }`}
                           />
-                          <span>{apt.currentStatus}</span>
+                          <span>{effectiveStatus.statusLabel}</span>
                         </span>
                         <div className="text-[10px] font-mono text-slate-400">
-                          {apt.firstObservedYear}–{apt.lastObservedYear}
+                          {apt.firstObservedYear}–{effectiveStatus.lastObservedYear}
                         </div>
                         {isHighPriority && (
                           <div

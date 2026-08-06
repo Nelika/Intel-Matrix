@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AptGroup, getMitreUrl } from '../types';
 import { ExternalLink, Shield, Building, Globe, Scale, ArrowRight, Printer, ShieldAlert } from 'lucide-react';
-import { getAccumulatedCisaAdvisories, getAdvisoriesForApt } from '../utils/cisaUtils';
+import { getAccumulatedCisaAdvisories, getAdvisoriesForApt, getEffectiveAptStatus } from '../utils/cisaUtils';
 
 interface AptCardGridProps {
   data: AptGroup[];
@@ -49,6 +49,7 @@ export const AptCardGrid: React.FC<AptCardGridProps> = ({ data, onSelectApt, onO
       <AnimatePresence mode="popLayout">
         {data.map((apt) => {
           const cisaAdvisories = cisaAdvisoriesMap.get(apt.id) || [];
+          const effectiveStatus = getEffectiveAptStatus(apt, cisaAdvisories);
           const isHighPriority = cisaAdvisories.length > 0;
 
           return (
@@ -108,23 +109,25 @@ export const AptCardGrid: React.FC<AptCardGridProps> = ({ data, onSelectApt, onO
                     </span>
                     <span
                       className={`text-[10px] font-mono px-2 py-0.5 font-bold rounded flex items-center gap-1 ${
-                        apt.currentStatus === 'Active'
-                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
-                          : apt.currentStatus === 'Intermittent'
+                        effectiveStatus.status === 'Active'
+                          ? effectiveStatus.isUpgradedByCisa
+                            ? 'bg-gradient-to-r from-red-100 to-emerald-100 text-red-900 border border-red-300'
+                            : 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                          : effectiveStatus.status === 'Intermittent'
                           ? 'bg-amber-50 text-amber-800 border border-amber-300'
                           : 'bg-slate-100 text-slate-600 border border-slate-200'
                       }`}
                     >
                       <span
                         className={`w-1.5 h-1.5 rounded-full ${
-                          apt.currentStatus === 'Active'
+                          effectiveStatus.status === 'Active'
                             ? 'bg-emerald-500 animate-ping'
-                            : apt.currentStatus === 'Intermittent'
+                            : effectiveStatus.status === 'Intermittent'
                             ? 'bg-amber-500'
                             : 'bg-slate-400'
                         }`}
                       />
-                      <span>{apt.currentStatus}</span>
+                      <span>{effectiveStatus.statusLabel}</span>
                     </span>
                   </div>
                 </div>

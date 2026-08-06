@@ -20,6 +20,7 @@ import {
   Target,
 } from 'lucide-react';
 import { AptGroup, ActivitySpan } from '../types';
+import { getAccumulatedCisaAdvisories, getEffectiveAptStatus } from '../utils/cisaUtils';
 
 interface AptActivityGraphProps {
   data: AptGroup[];
@@ -41,27 +42,52 @@ export const AptActivityGraph: React.FC<AptActivityGraphProps> = ({
   const [hoveredYear, setHoveredYear] = useState<number | null>(null);
   const [hoveredSpan, setHoveredSpan] = useState<{ aptId: string; span: ActivitySpan } | null>(null);
 
+  // Pre-calculate effective APT status using CISA advisories
+  const effectiveStatusMap = useMemo(() => {
+    const advisories = getAccumulatedCisaAdvisories();
+    const map = new Map<string, ReturnType<typeof getEffectiveAptStatus>>();
+    (data || []).forEach((apt) => {
+      map.set(apt.id, getEffectiveAptStatus(apt, advisories));
+    });
+    return map;
+  }, [data]);
+
   // Compute stats across current filtered data
   const stats = useMemo(() => {
     const safeData = data || [];
-    const activeCount = safeData.filter((d) => d?.currentStatus === 'Active').length;
-    const dormantCount = safeData.filter((d) => d?.currentStatus === 'Dormant').length;
-    const intermittentCount = safeData.filter((d) => d?.currentStatus === 'Intermittent').length;
+    let activeCount = 0;
+    let dormantCount = 0;
+    let intermittentCount = 0;
+
+    safeData.forEach((d) => {
+      const eff = effectiveStatusMap.get(d.id);
+      const st = eff?.status || d.currentStatus;
+      if (st === 'Active') activeCount++;
+      else if (st === 'Dormant') dormantCount++;
+      else if (st === 'Intermittent') intermittentCount++;
+    });
+
     return { activeCount, dormantCount, intermittentCount, total: safeData.length };
-  }, [data]);
+  }, [data, effectiveStatusMap]);
 
   // Filter and sort APT groups
   const filteredApts = useMemo(() => {
     let result = data || [];
 
     if (statusFilter !== 'ALL') {
-      result = result.filter((apt) => apt?.currentStatus === statusFilter);
+      result = result.filter((apt) => {
+        const eff = effectiveStatusMap.get(apt.id);
+        const st = eff?.status || apt.currentStatus;
+        return st === statusFilter;
+      });
     }
 
     return [...result].sort((a, b) => {
       if (sortBy === 'status') {
         const orderMap: Record<string, number> = { Active: 0, Intermittent: 1, Dormant: 2 };
-        const statusDiff = orderMap[a.currentStatus] - orderMap[b.currentStatus];
+        const stA = effectiveStatusMap.get(a.id)?.status || a.currentStatus;
+        const stB = effectiveStatusMap.get(b.id)?.status || b.currentStatus;
+        const statusDiff = (orderMap[stA] ?? 3) - (orderMap[stB] ?? 3);
         if (statusDiff !== 0) return statusDiff;
         return a.classification.localeCompare(b.classification);
       } else if (sortBy === 'year') {
@@ -70,7 +96,7 @@ export const AptActivityGraph: React.FC<AptActivityGraphProps> = ({
         return a.classification.localeCompare(b.classification);
       }
     });
-  }, [data, statusFilter, sortBy]);
+  }, [data, statusFilter, sortBy, effectiveStatusMap]);
 
   // Year markers for the x-axis timeline grid
   const yearTicks = useMemo(() => {
@@ -295,8 +321,11 @@ export const AptActivityGraph: React.FC<AptActivityGraphProps> = ({
 
             <AnimatePresence>
               {filteredApts.map((apt) => {
-                const isCurrentlyActive = apt.currentStatus === 'Active';
-                const isIntermittent = apt.currentStatus === 'Intermittent';
+                const effStatus = effectiveStatusMap.get(apt.id);
+                const currentSt = effStatus?.status || apt.currentStatus;
+                const isCurrentlyActive = currentSt === 'Active';
+                const isIntermittent = currentSt === 'Intermittent';
+                const statusLabel = effStatus?.statusLabel || apt.currentStatus;
 
                 return (
                   <motion.div
@@ -345,7 +374,7 @@ export const AptActivityGraph: React.FC<AptActivityGraphProps> = ({
                               : 'bg-slate-400'
                           }`}
                         />
-                        <span>{apt.currentStatus}</span>
+                        <span>{statusLabel}</span>
                       </span>
                     </div>
 
