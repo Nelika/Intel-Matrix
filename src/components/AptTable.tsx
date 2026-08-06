@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AptGroup, SortField, SortOrder, getMitreUrl } from '../types';
-import { ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Shield, Copy, Check, Info, Printer } from 'lucide-react';
+import { ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Shield, Copy, Check, Info, Printer, ShieldAlert, Flame, AlertTriangle } from 'lucide-react';
+import { getAccumulatedCisaAdvisories, getAdvisoriesForApt } from '../utils/cisaUtils';
 
 interface AptTableProps {
   data: AptGroup[];
@@ -24,6 +25,15 @@ export const AptTable: React.FC<AptTableProps> = ({
   searchQuery,
   isCompact = false,
 }) => {
+  // Pre-calculate associated CISA advisories map for all APT groups
+  const cisaAdvisoriesMap = useMemo(() => {
+    const allAdvisories = getAccumulatedCisaAdvisories();
+    const map = new Map<string, ReturnType<typeof getAdvisoriesForApt>>();
+    data.forEach((apt) => {
+      map.set(apt.id, getAdvisoriesForApt(apt, allAdvisories));
+    });
+    return map;
+  }, [data]);
   const renderSortIcon = (field: SortField) => {
     if (sortField !== field) {
       return <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600" />;
@@ -173,11 +183,13 @@ export const AptTable: React.FC<AptTableProps> = ({
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-slate-100 font-sans text-xs">
+              <tbody className="divide-y divide-slate-100 font-sans text-xs">
             <AnimatePresence mode="popLayout">
               {data.map((apt) => {
                 const isPla = apt.sponsoringOrgType === 'PLA';
                 const isMss = apt.sponsoringOrgType === 'MSS';
+                const cisaAdvisories = cisaAdvisoriesMap.get(apt.id) || [];
+                const isHighPriority = cisaAdvisories.length > 0;
 
                 return (
                   <motion.tr
@@ -197,7 +209,11 @@ export const AptTable: React.FC<AptTableProps> = ({
                       y: { duration: 0.15 },
                     }}
                     onClick={() => onSelectApt(apt)}
-                    className="hover:bg-blue-50/90 transition-all cursor-pointer group border-l-2 border-l-transparent hover:border-l-blue-600 hover:shadow-xs relative z-0 hover:z-10"
+                    className={`hover:bg-blue-50/90 transition-all cursor-pointer group border-l-2 relative z-0 hover:z-10 ${
+                      isHighPriority
+                        ? 'border-l-red-500 bg-red-50/10 hover:border-l-red-600'
+                        : 'border-l-transparent hover:border-l-blue-600'
+                    }`}
                   >
                     
                     {/* MITRE ID */}
@@ -219,35 +235,62 @@ export const AptTable: React.FC<AptTableProps> = ({
 
                     {/* APT Classification */}
                     <td className={`${tdClass} font-serif font-bold text-slate-900 whitespace-nowrap`}>
-                      <span className={`${isCompact ? 'px-2 py-0 text-[11px]' : 'px-2.5 py-0.5 text-xs'} bg-rose-50 border border-rose-200 text-rose-700 inline-block font-sans font-semibold rounded`}>
-                        {highlightMatch(apt.classification)}
-                      </span>
+                      <div className="flex flex-col items-start gap-1">
+                        <span className={`${isCompact ? 'px-2 py-0 text-[11px]' : 'px-2.5 py-0.5 text-xs'} bg-rose-50 border border-rose-200 text-rose-700 inline-block font-sans font-semibold rounded`}>
+                          {highlightMatch(apt.classification)}
+                        </span>
+                        {isHighPriority && (
+                          <span
+                            title={`Active CISA ICS Threat: Associated with ${cisaAdvisories.length} CISA advisory (${cisaAdvisories.map((a) => a.advisoryId).join(', ')})`}
+                            className={`inline-flex items-center gap-1 font-mono font-extrabold rounded-full border shadow-xs ${
+                              isCompact ? 'px-1.5 py-0 text-[9px]' : 'px-2 py-0.5 text-[10px]'
+                            } bg-red-950 text-red-300 border-red-500/70 shadow-red-900/30`}
+                          >
+                            <ShieldAlert className={`${isCompact ? 'w-2.5 h-2.5' : 'w-3 h-3'} text-red-400 shrink-0 animate-pulse`} />
+                            <span>HIGH-PRIORITY</span>
+                            <span className="bg-red-500 text-white rounded-full px-1.5 py-0 text-[9px] font-mono font-extrabold leading-none">
+                              {cisaAdvisories.length}
+                            </span>
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Status & Lifecycle Window */}
                     <td className={`${tdClass} whitespace-nowrap`}>
-                      <span
-                        className={`${isCompact ? 'px-2 py-0 text-[10px]' : 'px-2.5 py-0.5 text-[11px]'} font-mono font-bold rounded-full inline-flex items-center gap-1.5 ${
-                          apt.currentStatus === 'Active'
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                            : apt.currentStatus === 'Intermittent'
-                            ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                            : 'bg-slate-100 text-slate-600 border border-slate-200'
-                        }`}
-                      >
+                      <div className="flex flex-col items-start gap-0.5">
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
+                          className={`${isCompact ? 'px-2 py-0 text-[10px]' : 'px-2.5 py-0.5 text-[11px]'} font-mono font-bold rounded-full inline-flex items-center gap-1.5 ${
                             apt.currentStatus === 'Active'
-                              ? 'bg-emerald-500 animate-ping'
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                               : apt.currentStatus === 'Intermittent'
-                              ? 'bg-amber-500'
-                              : 'bg-slate-400'
+                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                              : 'bg-slate-100 text-slate-600 border border-slate-200'
                           }`}
-                        />
-                        <span>{apt.currentStatus}</span>
-                      </span>
-                      <div className="text-[10px] font-mono text-slate-400 mt-0.5">
-                        {apt.firstObservedYear}–{apt.lastObservedYear}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              apt.currentStatus === 'Active'
+                                ? 'bg-emerald-500 animate-ping'
+                                : apt.currentStatus === 'Intermittent'
+                                ? 'bg-amber-500'
+                                : 'bg-slate-400'
+                            }`}
+                          />
+                          <span>{apt.currentStatus}</span>
+                        </span>
+                        <div className="text-[10px] font-mono text-slate-400">
+                          {apt.firstObservedYear}–{apt.lastObservedYear}
+                        </div>
+                        {isHighPriority && (
+                          <div
+                            title={`${cisaAdvisories.length} Active CISA ICS Advisories linked`}
+                            className="mt-0.5 flex items-center gap-1 text-[9px] font-mono font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.2 rounded"
+                          >
+                            <Flame className="w-2.5 h-2.5 text-red-500 animate-pulse shrink-0" />
+                            <span>ICS Threat Active</span>
+                          </div>
+                        )}
                       </div>
                     </td>
 

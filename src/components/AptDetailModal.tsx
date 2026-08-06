@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AptGroup, getMitreUrl } from '../types';
-import { X, ExternalLink, ShieldAlert, Building, Globe, Scale, Copy, Check, FileText, Share2, Terminal, Printer } from 'lucide-react';
+import { X, ExternalLink, ShieldAlert, Building, Globe, Scale, Copy, Check, FileText, Share2, Terminal, Printer, Radio, Flame } from 'lucide-react';
+import { getAccumulatedCisaAdvisories, getAdvisoriesForApt } from '../utils/cisaUtils';
 
 interface AptDetailModalProps {
   apt: AptGroup | null;
@@ -12,6 +13,11 @@ interface AptDetailModalProps {
 
 export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose, onOpenMitreModal, onOpenBriefingModal }) => {
   const [copiedFormat, setCopiedFormat] = useState<'json' | 'md' | null>(null);
+
+  const cisaAdvisories = useMemo(() => {
+    if (!apt) return [];
+    return getAdvisoriesForApt(apt);
+  }, [apt]);
 
   if (!apt) return null;
 
@@ -90,10 +96,16 @@ export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose, on
             )}
           </div>
 
-          <div className="flex flex-wrap items-baseline gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-2xl font-serif font-bold text-slate-900">
               {apt.classification}
             </h2>
+            {cisaAdvisories.length > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-950 text-red-300 border border-red-500/80 font-mono text-xs font-bold animate-pulse shadow-sm">
+                <ShieldAlert className="w-4 h-4 text-red-400 shrink-0" />
+                <span>HIGH-PRIORITY THREAT ({cisaAdvisories.length} CISA Advisories)</span>
+              </span>
+            )}
             <a
               href={getMitreUrl(apt)}
               target="_blank"
@@ -108,6 +120,49 @@ export const AptDetailModal: React.FC<AptDetailModalProps> = ({ apt, onClose, on
 
         {/* Content Breakdown */}
         <div className="space-y-4 text-sm">
+
+          {/* CISA Advisories Alert Card */}
+          {cisaAdvisories.length > 0 && (
+            <div className="p-4 bg-gradient-to-r from-red-950 via-slate-900 to-slate-950 border border-red-500/40 rounded-xl text-white font-mono shadow-md">
+              <div className="flex items-center justify-between gap-2 border-b border-red-500/30 pb-2.5 mb-3">
+                <div className="flex items-center gap-2">
+                  <Flame className="w-4 h-4 text-red-400 animate-pulse shrink-0" />
+                  <span className="font-bold text-red-200 text-xs uppercase tracking-wider">
+                    Associated Active CISA ICS Advisories ({cisaAdvisories.length})
+                  </span>
+                </div>
+                <span className="text-[10px] bg-red-500/30 text-red-300 border border-red-500/50 px-2 py-0.5 rounded-full font-bold">
+                  Immediate Threat Vector
+                </span>
+              </div>
+              <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+                {cisaAdvisories.map((adv) => (
+                  <div key={adv.id} className="p-2.5 bg-slate-900/90 border border-slate-800 hover:border-red-500/50 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition-all">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-red-400 text-xs">{adv.advisoryId}</span>
+                        <span className="text-[11px] text-slate-300 font-sans font-medium line-clamp-1">{adv.title}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                        <span>Vendor: <strong className="text-slate-200">{adv.vendor}</strong></span>
+                        <span>&bull;</span>
+                        <span>Published: {new Date(adv.pubDate).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <a
+                      href={adv.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-2.5 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/40 text-[10px] rounded font-bold flex items-center gap-1 shrink-0 self-start sm:self-center transition-colors"
+                    >
+                      <span>View CISA Feed</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Operational Lifecycle Status Banner */}
           <div className="p-4 bg-slate-900 text-white rounded-lg font-mono">

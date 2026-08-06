@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AptGroup, getMitreUrl } from '../types';
-import { ExternalLink, Shield, Building, Globe, Scale, ArrowRight, Printer } from 'lucide-react';
+import { ExternalLink, Shield, Building, Globe, Scale, ArrowRight, Printer, ShieldAlert } from 'lucide-react';
+import { getAccumulatedCisaAdvisories, getAdvisoriesForApt } from '../utils/cisaUtils';
 
 interface AptCardGridProps {
   data: AptGroup[];
@@ -11,6 +12,15 @@ interface AptCardGridProps {
 }
 
 export const AptCardGrid: React.FC<AptCardGridProps> = ({ data, onSelectApt, onOpenBriefingModal, searchQuery }) => {
+  const cisaAdvisoriesMap = useMemo(() => {
+    const allAdvisories = getAccumulatedCisaAdvisories();
+    const map = new Map<string, ReturnType<typeof getAdvisoriesForApt>>();
+    data.forEach((apt) => {
+      map.set(apt.id, getAdvisoriesForApt(apt, allAdvisories));
+    });
+    return map;
+  }, [data]);
+
   const highlightMatch = (text: string) => {
     if (!searchQuery.trim()) return text;
     const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
@@ -38,6 +48,9 @@ export const AptCardGrid: React.FC<AptCardGridProps> = ({ data, onSelectApt, onO
     >
       <AnimatePresence mode="popLayout">
         {data.map((apt) => {
+          const cisaAdvisories = cisaAdvisoriesMap.get(apt.id) || [];
+          const isHighPriority = cisaAdvisories.length > 0;
+
           return (
             <motion.div
               key={apt.id}
@@ -52,16 +65,18 @@ export const AptCardGrid: React.FC<AptCardGridProps> = ({ data, onSelectApt, onO
               }}
               whileHover={{ y: -6, transition: { duration: 0.2 } }}
               onClick={() => onSelectApt(apt)}
-              className="bg-white border border-slate-200 hover:border-blue-400 p-4 sm:p-5 rounded-xl shadow-xs hover:shadow-md transition-shadow duration-200 flex flex-col justify-between cursor-pointer group relative max-w-full overflow-hidden break-words"
+              className={`bg-white border p-4 sm:p-5 rounded-xl shadow-xs hover:shadow-md transition-shadow duration-200 flex flex-col justify-between cursor-pointer group relative max-w-full overflow-hidden break-words ${
+                isHighPriority ? 'border-red-300 hover:border-red-500' : 'border-slate-200 hover:border-blue-400'
+              }`}
             >
               {/* Top Accent line */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600" />
+              <div className={`absolute top-0 left-0 right-0 h-1 ${isHighPriority ? 'bg-red-600' : 'bg-blue-600'}`} />
 
               <div>
                 {/* Card Header */}
                 <div className="flex items-start justify-between gap-3 mb-4 pt-1">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-serif font-bold text-xl text-slate-900">
                         {highlightMatch(apt.classification)}
                       </span>
@@ -76,6 +91,15 @@ export const AptCardGrid: React.FC<AptCardGridProps> = ({ data, onSelectApt, onO
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     </div>
+                    {isHighPriority && (
+                      <div className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-950 text-red-300 border border-red-500/70 text-[10px] font-mono font-bold">
+                        <ShieldAlert className="w-3 h-3 text-red-400 animate-pulse shrink-0" />
+                        <span>HIGH-PRIORITY THREAT</span>
+                        <span className="bg-red-500 text-white rounded-full px-1.5 py-0 text-[9px] font-extrabold">
+                          {cisaAdvisories.length}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col items-end gap-1">
