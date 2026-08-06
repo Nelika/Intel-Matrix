@@ -63,7 +63,6 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     { id: 'view-timeline', type: 'view', mode: 'timeline', label: 'Switch to Legal Timeline View', icon: Clock, shortcut: '3' },
     { id: 'view-graph', type: 'view', mode: 'graph', label: 'Switch to Activity Graph View', icon: Activity, shortcut: '4' },
     { id: 'view-network', type: 'view', mode: 'network', label: 'Switch to Network Topology View', icon: Share2, shortcut: '5' },
-    { id: 'view-mitre', type: 'view', mode: 'mitre', label: 'Switch to MITRE ATT&CK SDK View', icon: Terminal, shortcut: '6' },
   ] as const;
 
   const sponsorFilterActions = [

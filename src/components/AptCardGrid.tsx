@@ -34,7 +34,7 @@ export const AptCardGrid: React.FC<AptCardGridProps> = ({ data, onSelectApt, onO
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-6"
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 my-4 sm:my-6 max-w-full overflow-hidden"
     >
       <AnimatePresence mode="popLayout">
         {data.map((apt) => {
@@ -52,7 +52,7 @@ export const AptCardGrid: React.FC<AptCardGridProps> = ({ data, onSelectApt, onO
               }}
               whileHover={{ y: -6, transition: { duration: 0.2 } }}
               onClick={() => onSelectApt(apt)}
-              className="bg-white border border-slate-200 hover:border-blue-400 p-6 rounded-xl shadow-xs hover:shadow-md transition-shadow duration-200 flex flex-col justify-between cursor-pointer group relative overflow-hidden"
+              className="bg-white border border-slate-200 hover:border-blue-400 p-4 sm:p-5 rounded-xl shadow-xs hover:shadow-md transition-shadow duration-200 flex flex-col justify-between cursor-pointer group relative max-w-full overflow-hidden break-words"
             >
               {/* Top Accent line */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600" />

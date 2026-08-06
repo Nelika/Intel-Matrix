@@ -272,19 +272,6 @@ export const Header: React.FC<HeaderProps> = ({
                       <span>Briefing PDF</span>
                     </motion.button>
                   )}
-
-                  {onOpenMitreModal && (
-                    <motion.button
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={onOpenMitreModal}
-                      title="Open MITRE ATT&CK Python SDK & Layer Exporter"
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/60 text-cyan-300 hover:text-cyan-100 text-xs font-mono font-bold transition-all shadow-[0_0_12px_rgba(6,182,212,0.25)] cursor-pointer"
-                    >
-                      <Terminal className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-                      <span>MITRE SDK</span>
-                    </motion.button>
-                  )}
                 </motion.div>
               )}
             </AnimatePresence>

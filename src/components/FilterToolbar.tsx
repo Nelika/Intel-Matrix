@@ -63,12 +63,10 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
   const modes = [
     { id: 'table', label: 'Matrix Table', icon: Table },
     { id: 'grid', label: 'Card Grid', icon: LayoutGrid },
-    { id: 'cisa', label: 'CISA ICS Feed', icon: ShieldAlert },
     { id: 'compare', label: 'Compare Groups', icon: ArrowLeftRight },
     { id: 'timeline', label: 'Legal Timeline', icon: Clock },
     { id: 'graph', label: 'Activity Graph', icon: Activity },
     { id: 'network', label: 'Network Graph', icon: Share2 },
-    { id: 'mitre', label: 'MITRE ATT&CK SDK', icon: Terminal },
   ] as const;
 
   return (
@@ -76,7 +74,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="bg-white border border-slate-200 p-4 mb-6 shadow-xs rounded-xl space-y-4"
+      className="bg-white border border-slate-200 p-3 sm:p-4 mb-6 shadow-xs rounded-xl space-y-4 max-w-full overflow-hidden"
     >
       
       {/* Top Search & Layout Controls */}
@@ -227,8 +225,8 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
             )}
           </AnimatePresence>
 
-          {/* View Mode Tabs - Horizontally scrollable on mobile */}
-          <div className="flex overflow-x-auto sm:grid sm:grid-cols-4 lg:flex lg:flex-wrap gap-1 bg-slate-100 border border-slate-200 p-1 rounded-xl relative w-full sm:w-auto scrollbar-none">
+          {/* View Mode Tabs - Flex wrapped & scroll-safe */}
+          <div className="flex flex-wrap items-center gap-1 bg-slate-100 border border-slate-200 p-1 rounded-xl relative max-w-full overflow-hidden">
             {modes.map((mode) => {
               const Icon = mode.icon;
               const isActive = viewMode === mode.id;

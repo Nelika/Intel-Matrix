@@ -302,27 +302,27 @@ export default function App() {
               }}
             />
 
-      {/* Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+      {/* Main Container */}
+      <main className="w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6 relative z-10 overflow-hidden">
 
         {/* Featured Top Section: CISA ICS Advisory Feed */}
-        <div id="cisa-ics-feed-section" className="mb-8 scroll-mt-28">
-          <div className="flex items-center justify-between mb-3 bg-slate-950 border border-red-900/80 p-3.5 rounded-xl text-white shadow-md">
-            <div className="flex items-center gap-2.5 font-mono text-xs font-bold text-red-300">
-              <span className="p-1.5 rounded-lg bg-red-950 border border-red-800 text-red-400">
+        <div id="cisa-ics-feed-section" className="mb-6 sm:mb-8 scroll-mt-28 max-w-full">
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 mb-3 bg-slate-950 border border-red-900/80 p-3 sm:p-3.5 rounded-xl text-white shadow-md max-w-full overflow-hidden">
+            <div className="flex flex-wrap items-center gap-2 font-mono text-xs font-bold text-red-300 min-w-0">
+              <span className="p-1.5 rounded-lg bg-red-950 border border-red-800 text-red-400 shrink-0">
                 <ShieldAlert className="w-4 h-4 animate-pulse" />
               </span>
-              <span className="uppercase tracking-wider">CISA ICS Advisory Stream Integration</span>
-              <span className="text-[10px] bg-red-900/90 text-red-200 px-1.5 py-0.2 rounded border border-red-700 font-bold">
-                Live XML Stream
+              <span className="uppercase tracking-wider truncate">CISA ICS Advisory Stream</span>
+              <span className="text-[10px] bg-red-900/90 text-red-200 px-1.5 py-0.2 rounded border border-red-700 font-bold shrink-0">
+                Live Stream
               </span>
             </div>
 
             <button
               onClick={() => setShowCisaFeed((prev) => !prev)}
-              className="px-3.5 py-1.5 bg-red-950 hover:bg-red-900 text-red-200 border border-red-700 hover:border-red-500 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-sm"
+              className="px-3 py-1.5 bg-red-950 hover:bg-red-900 text-red-200 border border-red-700 hover:border-red-500 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-sm"
             >
-              <span>Open CISA ICS Feed ({showCisaFeed ? 'Active' : 'Browse'})</span>
+              <span>CISA Feed ({showCisaFeed ? 'Active' : 'Browse'})</span>
               {showCisaFeed ? (
                 <EyeOff className="w-3.5 h-3.5 text-red-400" />
               ) : (
@@ -457,18 +457,18 @@ export default function App() {
         </div>
 
         {/* Main APT Dataset Widget */}
-        <div id="apt-china-dataset-section" className="mb-4 scroll-mt-28">
-          <div className="flex items-center justify-between bg-slate-950 border border-cyan-800/80 p-3.5 rounded-xl text-white shadow-md">
-            <div className="flex items-center gap-2.5 font-mono text-xs font-bold text-cyan-300">
-              <span className="p-1.5 rounded-lg bg-cyan-950 border border-cyan-800 text-cyan-400">
+        <div id="apt-china-dataset-section" className="mb-4 scroll-mt-28 max-w-full">
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 bg-slate-950 border border-cyan-800/80 p-3 sm:p-3.5 rounded-xl text-white shadow-md max-w-full overflow-hidden">
+            <div className="flex flex-wrap items-center gap-2 font-mono text-xs font-bold text-cyan-300 min-w-0">
+              <span className="p-1.5 rounded-lg bg-cyan-950 border border-cyan-800 text-cyan-400 shrink-0">
                 <Database className="w-4 h-4" />
               </span>
-              <span className="uppercase tracking-wider">APT China (PRC) Dataset</span>
-              <span className="text-[10px] bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded border border-cyan-800 font-mono font-bold">
+              <span className="uppercase tracking-wider truncate">APT China (PRC) Dataset</span>
+              <span className="text-[10px] bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded border border-cyan-800 font-mono font-bold shrink-0">
                 {filteredData.length} GROUPS ACTIVE
               </span>
             </div>
-            <div className="text-[11px] font-mono text-slate-400 hidden sm:block">
+            <div className="text-[11px] font-mono text-slate-400 hidden md:block truncate">
               Primary Threat Actor Matrix &amp; Intelligence Repository
             </div>
           </div>

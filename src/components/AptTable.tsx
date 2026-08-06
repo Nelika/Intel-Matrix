@@ -70,20 +70,20 @@ export const AptTable: React.FC<AptTableProps> = ({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden my-6"
+      className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden max-w-full my-4 sm:my-6"
     >
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+      <div className="w-full max-w-full overflow-x-auto">
+        <table className="w-full text-left border-collapse min-w-[900px]">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-mono text-slate-500 uppercase tracking-[0.12em] select-none">
               
               {/* MITRE Attack ID */}
               <th
                 onClick={() => onSort('id')}
-                className="py-3.5 px-4 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[130px]"
+                className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[110px]"
               >
                 <div className="flex items-center gap-1.5">
-                  <span>MITRE Attack ID</span>
+                  <span>MITRE ID</span>
                   {renderSortIcon('id')}
                 </div>
               </th>
@@ -91,41 +91,41 @@ export const AptTable: React.FC<AptTableProps> = ({
               {/* APT / Classification */}
               <th
                 onClick={() => onSort('classification')}
-                className="py-3.5 px-4 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[120px]"
+                className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[110px]"
               >
                 <div className="flex items-center gap-1.5">
-                  <span>APT / Classification</span>
+                  <span>APT Group</span>
                   {renderSortIcon('classification')}
                 </div>
               </th>
 
               {/* Status & Lifecycle Window */}
-              <th className="py-3.5 px-4 font-bold whitespace-nowrap min-w-[140px]">
+              <th className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold whitespace-nowrap min-w-[120px]">
                 Activity Status
               </th>
 
               {/* Microsoft Taxonomy */}
-              <th className="py-3.5 px-4 font-bold whitespace-nowrap min-w-[190px]">
+              <th className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold whitespace-nowrap min-w-[150px]">
                 Microsoft Taxonomy
               </th>
 
               {/* Kaspersky / Securelist Tracking */}
-              <th className="py-3.5 px-4 font-bold whitespace-nowrap min-w-[190px]">
-                Kaspersky / Securelist Tracking
+              <th className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold whitespace-nowrap min-w-[150px]">
+                Kaspersky Tracking
               </th>
 
               {/* Major Aliases / Associated Groups */}
-              <th className="py-3.5 px-4 font-bold whitespace-nowrap min-w-[220px]">
-                Major Aliases / Associated Groups
+              <th className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold whitespace-nowrap min-w-[160px]">
+                Major Aliases
               </th>
 
               {/* Sponsoring State Authority */}
               <th
                 onClick={() => onSort('sponsoringAuthority')}
-                className="py-3.5 px-4 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[200px]"
+                className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[160px]"
               >
                 <div className="flex items-center gap-1.5">
-                  <span>Sponsoring State Authority</span>
+                  <span>State Sponsor</span>
                   {renderSortIcon('sponsoringAuthority')}
                 </div>
               </th>
@@ -133,26 +133,26 @@ export const AptTable: React.FC<AptTableProps> = ({
               {/* Front Company / Contractor Entity */}
               <th
                 onClick={() => onSort('frontCompany')}
-                className="py-3.5 px-4 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[200px]"
+                className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold cursor-pointer group hover:text-slate-900 transition-colors whitespace-nowrap min-w-[160px]"
               >
                 <div className="flex items-center gap-1.5">
-                  <span>Front Company / Contractor</span>
+                  <span>Front Company</span>
                   {renderSortIcon('frontCompany')}
                 </div>
               </th>
 
               {/* Primary Targeted Sectors */}
-              <th className="py-3.5 px-4 font-bold whitespace-nowrap min-w-[240px]">
-                Primary Targeted Sectors
+              <th className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold whitespace-nowrap min-w-[180px]">
+                Targeted Sectors
               </th>
 
               {/* Legal and Regulatory Actions */}
-              <th className="py-3.5 px-4 font-bold whitespace-nowrap min-w-[240px]">
-                Legal and Enforcement Actions
+              <th className="py-3 px-3 sm:py-3.5 sm:px-4 font-bold whitespace-nowrap min-w-[180px]">
+                Legal Actions
               </th>
 
               {/* Details Action */}
-              <th className="py-3.5 px-3 text-center whitespace-nowrap w-[70px]">
+              <th className="py-3 px-2 sm:py-3.5 sm:px-3 text-center whitespace-nowrap w-[60px]">
                 Inspect
               </th>
 
