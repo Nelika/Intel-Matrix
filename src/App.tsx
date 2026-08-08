@@ -21,6 +21,7 @@ import { VintageTerminalLoading } from './components/VintageTerminalLoading';
 import { CommandPaletteModal } from './components/CommandPaletteModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { CisaIcsAdvisoriesFeed } from './components/CisaIcsAdvisoriesFeed';
+import { getAccumulatedCisaAdvisories, getAptAlertInfo } from './utils/cisaUtils';
 import { AboutUsPage } from './components/AboutUsPage';
 import { ShieldCheck, BarChart2, Eye, EyeOff, Lock, ExternalLink, Share2, Command, Keyboard, ShieldAlert, Flame, Database, Minimize2, Maximize2 } from 'lucide-react';
 
@@ -216,11 +217,26 @@ export default function App() {
 
       return true;
     }).sort((a, b) => {
-      let valA = a[sortField];
-      let valB = b[sortField];
+      if (sortField === 'alert') {
+        const advisories = getAccumulatedCisaAdvisories();
+        const alertA = getAptAlertInfo(a, advisories);
+        const alertB = getAptAlertInfo(b, advisories);
+        if (alertA.rank !== alertB.rank) {
+          return sortOrder === 'asc' ? alertA.rank - alertB.rank : alertB.rank - alertA.rank;
+        }
+        if (alertA.advisoryCount !== alertB.advisoryCount) {
+          return sortOrder === 'asc' ? alertA.advisoryCount - alertB.advisoryCount : alertB.advisoryCount - alertA.advisoryCount;
+        }
+        return sortOrder === 'asc'
+          ? a.classification.localeCompare(b.classification)
+          : b.classification.localeCompare(a.classification);
+      }
 
-      if (typeof valA === 'string') valA = valA.toLowerCase();
-      if (typeof valB === 'string') valB = valB.toLowerCase();
+      let valA = a[sortField as keyof AptGroup];
+      let valB = b[sortField as keyof AptGroup];
+
+      if (typeof valA === 'string') valA = valA.toLowerCase() as any;
+      if (typeof valB === 'string') valB = valB.toLowerCase() as any;
 
       if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
       if (valA > valB) return sortOrder === 'asc' ? 1 : -1;

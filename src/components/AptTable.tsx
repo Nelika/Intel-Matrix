@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AptGroup, SortField, SortOrder, getMitreUrl } from '../types';
-import { ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Shield, Copy, Check, Info, Printer, ShieldAlert, Flame, AlertTriangle } from 'lucide-react';
-import { getAccumulatedCisaAdvisories, getAdvisoriesForApt, getEffectiveAptStatus } from '../utils/cisaUtils';
+import { ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Shield, Copy, Check, Info, Printer, ShieldAlert, Flame, AlertTriangle, TrendingUp } from 'lucide-react';
+import { getAccumulatedCisaAdvisories, getAdvisoriesForApt, getEffectiveAptStatus, getAptAlertInfo } from '../utils/cisaUtils';
+import { CisaSparkline } from './CisaSparkline';
 
 interface AptTableProps {
   data: AptGroup[];
@@ -128,6 +129,26 @@ export const AptTable: React.FC<AptTableProps> = ({
                 Activity Status
               </th>
 
+              {/* 12-Month CISA Advisories Sparkline */}
+              <th className={`${thStaticClass} min-w-[120px]`}>
+                <div className="flex items-center gap-1.5" title="Frequency of CISA ICS advisories linked to this APT over the last 12 months">
+                  <TrendingUp className="w-3 h-3 text-red-500" />
+                  <span>CISA Trend (12M)</span>
+                </div>
+              </th>
+
+              {/* Alert Status Column */}
+              <th
+                onClick={() => onSort('alert')}
+                className={`${thClass} min-w-[140px]`}
+              >
+                <div className="flex items-center gap-1.5" title="Newly detected high-risk activity based on the latest CISA advisories">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
+                  <span>Alert</span>
+                  {renderSortIcon('alert')}
+                </div>
+              </th>
+
               {/* Microsoft Taxonomy */}
               <th className={`${thStaticClass} min-w-[140px]`}>
                 Microsoft Taxonomy
@@ -190,6 +211,7 @@ export const AptTable: React.FC<AptTableProps> = ({
                 const isMss = apt.sponsoringOrgType === 'MSS';
                 const cisaAdvisories = cisaAdvisoriesMap.get(apt.id) || [];
                 const effectiveStatus = getEffectiveAptStatus(apt, cisaAdvisories);
+                const alertInfo = getAptAlertInfo(apt, cisaAdvisories);
                 const isHighPriority = cisaAdvisories.length > 0;
 
                 return (
@@ -295,6 +317,57 @@ export const AptTable: React.FC<AptTableProps> = ({
                           </div>
                         )}
                       </div>
+                    </td>
+
+                    {/* 12-Month CISA Advisories Sparkline Cell */}
+                    <td className={`${tdClass} whitespace-nowrap`}>
+                      <CisaSparkline advisories={cisaAdvisories} compact={isCompact} />
+                    </td>
+
+                    {/* Alert Status Cell */}
+                    <td className={`${tdClass} whitespace-nowrap`}>
+                      {alertInfo.alertLevel !== 'NONE' ? (
+                        <div className="flex flex-col items-start gap-0.5">
+                          <span
+                            title={`${alertInfo.summary} — ${alertInfo.latestAdvisoryTitle || ''}`}
+                            className={`inline-flex items-center gap-1 font-mono font-extrabold rounded-full border shadow-2xs ${
+                              isCompact ? 'px-2 py-0 text-[9px]' : 'px-2.5 py-0.5 text-[10px]'
+                            } ${alertInfo.badgeBg} ${alertInfo.badgeText} ${alertInfo.badgeBorder}`}
+                          >
+                            {alertInfo.pulse ? (
+                              <ShieldAlert className={`${isCompact ? 'w-2.5 h-2.5' : 'w-3 h-3'} text-red-400 shrink-0 animate-pulse`} />
+                            ) : (
+                              <AlertTriangle className={`${isCompact ? 'w-2.5 h-2.5' : 'w-3 h-3'} text-amber-600 shrink-0`} />
+                            )}
+                            <span>{alertInfo.label}</span>
+                            {alertInfo.advisoryCount > 0 && (
+                              <span className="bg-red-500 text-white rounded-full px-1.5 py-0 text-[9px] font-mono font-extrabold leading-none">
+                                {alertInfo.advisoryCount}
+                              </span>
+                            )}
+                          </span>
+
+                          <div className="text-[10px] font-mono text-slate-500 max-w-[150px] truncate" title={alertInfo.summary}>
+                            {alertInfo.latestAdvisoryId ? (
+                              <span className="flex items-center gap-1">
+                                <span className="text-red-700 font-bold">{alertInfo.latestAdvisoryId}</span>
+                                {alertInfo.daysAgo !== undefined && (
+                                  <span className="text-slate-400 text-[9px]">
+                                    ({alertInfo.daysAgo === 0 ? 'today' : `${alertInfo.daysAgo}d ago`})
+                                  </span>
+                                )}
+                              </span>
+                            ) : (
+                              <span>{alertInfo.summary}</span>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-slate-400 font-mono text-[11px]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                          <span className="text-slate-400 text-[10px]">CLEAR</span>
+                        </div>
+                      )}
                     </td>
 
                     {/* Microsoft Taxonomy */}

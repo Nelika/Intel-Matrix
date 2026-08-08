@@ -29,7 +29,7 @@ export interface AptGroup {
   spans: ActivitySpan[];
 }
 
-export type SortField = 'id' | 'classification' | 'sponsoringAuthority' | 'frontCompany';
+export type SortField = 'id' | 'classification' | 'sponsoringAuthority' | 'frontCompany' | 'alert';
 export type SortOrder = 'asc' | 'desc';
 
 export interface FilterState {
